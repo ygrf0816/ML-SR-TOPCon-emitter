@@ -15,8 +15,8 @@ from python_tcad import pythontcad
 # - "continuous": 在边界内连续随机生成（推荐）
 SAMPLING_MODE = "continuous"
 
-# 可选：固定随机种子以复现数据集；None 表示每次不同
-RANDOM_SEED = None
+# 固定随机种子以复现数据集；设为 None 则每次不同
+RANDOM_SEED = 42
 if RANDOM_SEED is not None:
 	random.seed(RANDOM_SEED)
 
