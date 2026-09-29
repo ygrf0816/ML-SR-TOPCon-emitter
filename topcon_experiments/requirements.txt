@@ -1,0 +1,14 @@
+autogluon.tabular
+pandas
+numpy
+scikit-learn
+matplotlib
+seaborn
+shap
+scipy
+pymoo
+pysr
+sympy
+openai
+httpx>=0.18
+python-dotenv

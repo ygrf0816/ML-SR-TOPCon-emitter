@@ -1,0 +1,186 @@
+# ==============================================================
+# Silvaco ATHENA 选择性发射极工艺仿真脚本（参数前置注释版）
+#
+# 本版本将网格、工艺、提取坐标等参数统一前置到文件开头，
+# 并为每个参数单独添加用途注释，便于直接修改和维护。
+#
+# 供 LLM 智能体优化的核心参数（共 14 个，Python 批量扫描）：
+#   P1: sub_resis      衬底电阻率 (Ω·cm)            范围: 0.5  ~ 5.0
+#   P2: light_dose     全局轻磷注入剂量 (cm-2)      范围: 3e14 ~ 2e15
+#   P3: light_energy   全局轻磷注入能量 (keV)       范围: 10   ~ 60
+#   P4: light_drive    轻掺驱入时间 (min)           范围: 5    ~ 25
+#   P5: heavy_dose     激光区重磷注入剂量 (cm-2)    范围: 5e14 ~ 1e16
+#   P6: heavy_energy   激光区重磷注入能量 (keV)     范围: 10   ~ 60
+#   P7: anneal_temp    最终退火温度 (°C)            范围: 850  ~ 980
+#   P8: anneal_time    最终退火时间 (min)           范围: 5    ~ 30
+#   P9:  light_oxide_thick  轻掺前氧化层厚度 (μm)    范围: 0.005~0.02
+#   P10: mask_oxide_thick   掩膜氧化层厚度 (μm)      范围: 0.1  ~ 0.3
+#   P11: select_boundary_x  轻/重掺分界线 (μm)       范围: 14   ~ 16
+#   （另有 light_drive_temp / repair_temp / repair_time 亦参与扫描）
+#
+# LLM 读取的输出指标（共 6 个）：
+#   O1: Rs_light    轻掺区方块电阻 (Ω/sq)   目标: 150~280
+#   O2: Rs_heavy    重掺区方块电阻 (Ω/sq)   目标: 20~60
+#   O3: Xj_light    轻掺区结深 (μm)         目标: 0.20~0.40
+#   O4: Xj_heavy    重掺区结深 (μm)         目标: 0.35~0.55
+#   O5: Cs_light    轻掺区表面磷浓度 (cm-3) 目标: 1e19~8e19
+#   O6: Cs_heavy    重掺区表面磷浓度 (cm-3) 目标: >5e20
+# ==============================================================
+
+go athena
+
+# ==============================================================
+# 参数区：统一在这里修改
+# ==============================================================
+
+# `x_loc_1`：第一条 X 向网格线的位置，对应器件最左边界。
+set x_loc_1=0.0
+# `x_spac_1`：第一段 X 向网格间距，控制左侧区域网格疏密。
+set x_spac_1=0.5
+# `x_loc_2`：第二条 X 向网格线的位置，靠近选择性发射极边界左侧。
+set x_loc_2=14.0
+# `x_spac_2`：第二段 X 向网格间距，用于细化选择性边界附近左侧网格。
+set x_spac_2=0.25
+# `x_loc_3`：第三条 X 向网格线的位置，靠近选择性发射极边界右侧。
+set x_loc_3=16.0
+# `x_spac_3`：第三段 X 向网格间距，用于细化选择性边界附近右侧网格。
+set x_spac_3=0.25
+# `x_loc_4`：第四条 X 向网格线的位置，用于过渡到远离边界的主体区域。
+set x_loc_4=25.0
+# `x_spac_4`：第四段 X 向网格间距，控制中部区域网格密度。
+set x_spac_4=2.0
+# `x_loc_5`：最后一条 X 向网格线的位置，对应器件最右边界。
+set x_loc_5=100.0
+# `x_spac_5`：最右侧 X 向网格间距，控制远离关注区的粗网格。
+set x_spac_5=5.0
+
+# `y_loc_1`：第一条 Y 向网格线的位置，对应硅表面。
+set y_loc_1=0.000
+# `y_spac_1`：第一段 Y 向网格间距，用于表面极浅层细网格。
+set y_spac_1=0.002
+# `y_loc_2`：第二条 Y 向网格线的位置，用于细化浅结附近区域。
+set y_loc_2=0.020
+# `y_spac_2`：第二段 Y 向网格间距，用于表面下浅层区域。
+set y_spac_2=0.002
+# `y_loc_3`：第三条 Y 向网格线的位置，覆盖浅扩散层主体。
+set y_loc_3=0.050
+# `y_spac_3`：第三段 Y 向网格间距，平衡浅层精度和计算量。
+set y_spac_3=0.005
+# `y_loc_4`：第四条 Y 向网格线的位置，靠近目标结深范围。
+set y_loc_4=0.200
+# `y_spac_4`：第四段 Y 向网格间距，用于结深提取区域。
+set y_spac_4=0.010
+# `y_loc_5`：第五条 Y 向网格线的位置，覆盖更深的扩散尾部。
+set y_loc_5=0.600
+# `y_spac_5`：第五段 Y 向网格间距，控制中深层网格密度。
+set y_spac_5=0.030
+# `y_loc_6`：第六条 Y 向网格线的位置，用于硅体内部过渡。
+set y_loc_6=2.000
+# `y_spac_6`：第六段 Y 向网格间距，控制深层硅区网格粗细。
+set y_spac_6=0.10
+# `y_loc_7`：最后一条 Y 向网格线的位置，对应模拟深度下边界。
+set y_loc_7=5.000
+# `y_spac_7`：最深层 Y 向网格间距，用于降低远离结区的计算量。
+set y_spac_7=0.50
+
+# `sub_resis`：P 型硅衬底电阻率，用来设定初始硼背景掺杂水平。
+set sub_resis=1.5
+# `light_oxide_thick`：轻磷注入前屏蔽氧化层厚度。
+set light_oxide_thick=0.01
+# `light_oxide_div`：轻磷注入前氧化层的网格分层数。
+set light_oxide_div=1
+# `light_dose`：全区域轻磷注入剂量，主要决定轻掺区表面浓度和方块电阻。
+set light_dose=4e14
+# `light_energy`：全区域轻磷注入能量，主要影响轻掺区初始注入深度。
+set light_energy=18
+# `light_drive_time`：轻掺驱入退火时间，影响轻掺区结深和电阻。
+set light_drive_time=6
+# `light_drive_temp`：轻掺驱入退火温度，影响轻掺区扩散强度。
+set light_drive_temp=875
+
+# `mask_oxide_thick`：选择性重掺时掩膜氧化层厚度。
+set mask_oxide_thick=0.20
+# `mask_oxide_div`：选择性重掺掩膜氧化层的网格分层数。
+set mask_oxide_div=6
+# `select_boundary_x`：轻/重掺区域分界线的 X 坐标。
+set select_boundary_x=15.0
+# `heavy_dose`：激光区重磷注入剂量，主要决定重掺区表面浓度和方块电阻。
+set heavy_dose=6.8e15
+# `heavy_energy`：激光区重磷注入能量，主要决定重掺区注入深度。
+set heavy_energy=25
+# `anneal_temp`：重掺后高温激活退火温度。
+set anneal_temp=900
+# `anneal_time`：重掺后高温激活退火时间，影响重掺区结深和电阻。
+set anneal_time=4
+# `repair_temp`：最终低温修复退火温度，用于修复注入损伤。
+set repair_temp=820
+# `repair_time`：最终低温修复退火时间，用于微调电学结果。
+set repair_time=2
+
+# `metal_thick`：前表面铝金属接触层厚度。
+set metal_thick=0.02
+# `metal_div`：前表面铝金属层的网格分层数。
+set metal_div=2
+# `cathode_x`：前表面阴极电极的 X 定位坐标。
+set cathode_x=14.0
+
+# `x_light_extract`：轻掺区指标提取的 X 坐标位置。
+set x_light_extract=50.0
+# `x_heavy_extract`：重掺区指标提取的 X 坐标位置。
+set x_heavy_extract=7.5
+
+# `outfile_name`：最终结构输出文件名（Python 批量扫描时会覆盖为随机名）。
+set outfile_name=se_solar_final.str
+# `cutline_y_max`：Python cutline 提取深度上限（μm），与 se.in 网格深度一致。
+set cutline_y_max=5.0
+
+# ==============================================================
+# 正文
+# ==============================================================
+
+LINE X LOC=$x_loc_1 SPAC=$x_spac_1
+LINE X LOC=$x_loc_2 SPAC=$x_spac_2
+LINE X LOC=$x_loc_3 SPAC=$x_spac_3
+LINE X LOC=$x_loc_4 SPAC=$x_spac_4
+LINE X LOC=$x_loc_5 SPAC=$x_spac_5
+
+LINE Y LOC=$y_loc_1 SPAC=$y_spac_1
+LINE Y LOC=$y_loc_2 SPAC=$y_spac_2
+LINE Y LOC=$y_loc_3 SPAC=$y_spac_3
+LINE Y LOC=$y_loc_4 SPAC=$y_spac_4
+LINE Y LOC=$y_loc_5 SPAC=$y_spac_5
+LINE Y LOC=$y_loc_6 SPAC=$y_spac_6
+LINE Y LOC=$y_loc_7 SPAC=$y_spac_7
+INIT SILICON BORON RESISTIVITY=$sub_resis ORIENTATION=100 TWO.D
+
+STRUCTURE OUTFILE=step0_init.str
+
+METHOD FERMI
+DEPOSIT OXIDE THICK=$light_oxide_thick DIVISIONS=$light_oxide_div
+IMPLANT PHOSPHORUS DOSE=$light_dose ENERGY=$light_energy TILT=0 ROTATION=0
+DIFFUSE TIME=$light_drive_time TEMP=$light_drive_temp INERT
+
+STRUCTURE OUTFILE=step1_light_emitter.str
+
+DEPOSIT OXIDE THICK=$mask_oxide_thick DIVISIONS=$mask_oxide_div
+ETCH OXIDE LEFT P1.X=$select_boundary_x
+
+STRUCTURE OUTFILE=step2_psg_patterned.str
+IMPLANT PHOSPHORUS DOSE=$heavy_dose ENERGY=$heavy_energy TILT=0 ROTATION=0
+ETCH OXIDE ALL
+DIFFUSE TIME=$anneal_time TEMP=$anneal_temp INERT
+
+STRUCTURE OUTFILE=step3_laser_doping.str
+
+
+DIFFUSE TIME=$repair_time TEMP=$repair_temp INERT
+
+STRUCTURE OUTFILE=step4_post_anneal.str
+
+# O1~O6 工艺指标（Rs/Xj/Cs）改由 Python cutline_extract.py 从 .str 计算；
+# Athena 独立模式下 extract 会被忽略，不再在此重复定义。
+
+# 导出最终硅结构（供 Python cutline 提取轻/重掺剖面与复合曲线）
+# 金属/电极步骤在 TOPCon 流水线中跳过（器件 IV 由 ATLAS topcon_n_cd 独立完成）
+STRUCTURE OUTFILE=$outfile_name
+quit

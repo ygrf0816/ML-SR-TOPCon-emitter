@@ -1,0 +1,2799 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <ctype.h>
+#include <malloc.h>
+#include <string.h>
+#include <template.h>
+
+/*
+ * -----------------------------------------------------------------
+ * ATLAS Parser Function Template
+ * ATLAS Version 5.28.1.R
+ * c 1993 - 2019 SILVACO Inc. 
+ * All rights reserved.
+ * -----------------------------------------------------------------
+ */
+
+/*
+ * Electron velocity saturation model.
+ * Statement: MATERIAL
+ * Parameter: F.MUNSAT
+ * Arguments:
+ * tl    lattice temperature (K)
+ * na    acceptor concentration (per cc)
+ * nd    donor concentration (per cc)
+ * e     electric field (V/cm)
+ * v     saturation velocity (cm/s)
+ * mu0   low field mobility (cm^2/Vs)
+ * *mu   return: field dependent mobility (cm^2/Vs)
+ * *dmde return: derivative of mu with e
+ */
+int munsat(double tl, double na, double nd, double e,double v,double mu0,double *mu,double *dmde)   
+{
+/*
+ * The following body is set up to emulate the built-in function
+ * set by the FLDMOB parameter of the MODELS statement for
+ * silicon.  (NOTE: This is for ease of understanding.  Speed
+ * improvements can and should be made for user applications.)
+ */
+	double beta, a, b, c, d, da, db, dc, dd;
+	if(e == 0.0)
+	{
+		*mu = mu0;
+		*dmde = 0.0;
+	}
+	else
+	{
+		beta = 2.0;               /* 2 for electrons in silicon */
+/*
+ * Function evaluation.
+ */
+		a = mu0*e/v;
+		b = pow(a,beta);
+		c = 1.0 / (1.0 + b);
+		d = pow(c,1.0/beta);
+		*mu = mu0*d;
+/*
+ * Derivative evaluation.
+ */
+		da = mu0/v;
+		db = beta*b/a*da;
+		dc = -1.0*pow(1.0+b,-2.0)*db;
+		dd = d/(beta*c)*dc;
+		*dmde = mu0*dd;
+	}
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Hole velocity saturation model.
+ * Statement: MATERIAL
+ * Parameter: F.MUPSAT
+ * Arguments:
+ * tl    lattice temperature (K)
+ * na    acceptor concentration (per cc)
+ * nd    donor concentration (per cc)
+ * e     electric field (V/cm)
+ * v     saturation velocity (cm/s)
+ * mu0   low field mobility (cm^2/Vs)
+ * *mu   return: field dependent mobility (cm^2/Vs)
+ * *dmde return: derivative of mu with e
+ */
+int mupsat(double tl, double na, double nd, double e,double v,double mu0, double *mu, double *dmde)
+{
+/*
+ * The following body is set up to emulate the built-in function
+ * set by the FLDMOB parameter of the MODELS statement for
+ * silicon.  (NOTE: This is for ease of understanding.  Speed
+ * improvements can and should be made for user applications.)
+ */
+	double beta, a, b, c, d, da, db, dc, dd;
+	if(e == 0.0)
+	{
+		*mu = mu0;
+		*dmde = 0.0;
+	}
+	else
+	{
+		beta = 1.0;               /* 1 for holes in silicon */
+/*
+ * Function evaluation.
+ */
+		a = mu0*e/v;
+		b = pow(a,beta);
+		c = 1.0 / (1.0 + b);
+		d = pow(c,1.0/beta);
+		*mu = mu0*d;
+/*
+ * Derivative evaluation.
+ */
+		da = mu0/v;
+		db = beta*b/a*da;
+		dc = -1.0*pow(1.0+b,-2.0)*db;
+		dd = d/(beta*c)*dc;
+		*dmde = mu0*dd;
+	}
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Temperature and composition dependent band parameters
+ * Statement: MATERIAL
+ * Parameter: F.BANDCOMP
+ * Note:  This function can only be used with BLAZE.
+ * Arguments:
+ * xcomp   composition fraction "X"
+ * ycomp   composition fraction "Y"
+ * temp    temperature (K)
+ * *eg     return: band gap (eV)
+ * *chi    return: affinity (eV)
+ * *nc     return: conduction band density of states
+ * *nv     return: valence band density of states
+ * *degdt  return: derivative of Eg with respect to T
+ */
+int bandcomp(double xcomp,double ycomp,double temp,double *eg,double *chi,double *nc,double *nv,double *degdt)
+{
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Position dependent net doping.
+ * Statement: DOPING
+ * Parameter: F.DOPING
+ * Arguments:
+ * x      location x (microns)
+ * y      location y (microns)
+ * *nnet  net doping concentration (per cc)
+ */
+int doping(double x,double y,double *nnet)
+{
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Position dependent net doping.
+ * Statement: DOPING3
+ * Parameter: F3.DOPING
+ * Arguments:
+ * x      location x (microns)
+ * y      location y (microns)
+ * z      location z (microns)
+ * *nnet  net doping concentration (per cc)
+ */
+int doping3(double x,double y,double z,double *nnet)
+{
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Position dependent composition fractions.
+ * Statement: DOPING
+ * Parameter: F.COMPOSIT
+ * Note: This functions can only be used with BLAZE
+ * Arguments:
+ * x       location x (microns)
+ * y       location y (microns)
+ * *xcomp  composition fraction x
+ * *ycomp  composition fraction y
+ */
+int composition(double x,double y,double *xcomp,double *ycomp)
+{
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Composition and temperature dependent permitivity.
+ * Statement: MATERIAL
+ * Parameter: F.EPSILON
+ * Arguments:
+ * xcomp    composition fraction x
+ * ycomp    composition fraction y
+ * temp     temperature (K)
+ * *eps     relative permitivity
+ */
+int epsilon(double xcomp,double ycomp,double temp,double *eps)
+{
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Position and field dependent permitivity
+ * Statement: MATERIAL
+ * Parameter: F.FERRO
+ * Arguments:
+ * ef         electric field  (V/cm)
+ * *eps       relative permitivity multiplication factor
+ * *depsdef   derivative of eps with respect to ef
+ */
+int ferro(double ef,double *eps,double *depsdef)
+{
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Composition and temperature dependent electron saturation velocity
+ * Statement: MATERIAL
+ * Parameter: F.VSATN
+ * Arguments:
+ * xcomp      composition fraction x
+ * ycomp      composition fraction y
+ * temp       temperature (K)
+ * *vsn       electron saturation velocity (cm/s)
+ * *dvsn      derivative of vsn with T
+ */
+int vsatn(double xcomp,double ycomp,double temp,double *vsn,double *dvsn)
+{
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Composition and temperature dependent hole saturation velocity
+ * Statement: MATERIAL
+ * Parameter: F.VSATP
+ * Arguments:
+ * xcomp      composition fraction x
+ * ycomp      composition fraction y
+ * temp       temperature (K)
+ * *vsp       hole saturation velocity (cm/s)
+ * *dvsp      derivative of vsp with T
+ */
+int vsatp(double xcomp,double ycomp,double temp,double *vsp,double *dvsp)
+{
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Position, temperature, and concentration dependent recombination
+ * Statement: MATERIAL
+ * Parameter: F.RECOMB
+ * Arguments:
+ * xcomp      composition fraction x
+ * ycomp      composition fraction y
+ * temp       temperature (K)
+ * n          electron concentration (per cc)
+ * p          hole concentration (per cc)
+ * *r         recombination rate (per cc per s )
+ * *drdn      derivative of recomb with respect to n
+ * *drdp      derivative of recomb with respect to p
+ * *drdl      derivative of recomb with respect to T
+ */
+int recomb(double xcomp,double ycomp,double temp,double n,double p,double *r,double *drdn,double *drdp,double *drdl)
+{
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Wavelength dependent complex index of refraction 
+ * Statement: MATERIAL
+ * Parameter: F.INDEX
+ * Note: For raytracing (Luminous & Luminous3D) the arguments nconc, pconc
+ * and emag will be zeros.
+ * Arguments:
+ * lambda     wavelength (microns)
+ * temp       temperature (K)
+ * xcomp      composition fraction x
+ * ycomp      composition fraction y
+ * nconc      electron concentration (1/cc)
+ * pconc      hole concentration (1/cc)
+ * emag       magnitude of electric field (V/cm)
+ * *n         real part of index of refraction
+ * *k         imaginary part of index of refraction
+ */
+int index(double lambda,double temp,double xcomp,double ycomp,double nconc,double pconc,double emag,double *n,double *k)
+{
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Wavelength dependent complex index of refraction with bandgap
+ * Statement: MATERIAL
+ * Parameter: F.NKEG
+ * Note: For raytracing (Luminous & Luminous3D) the arguments nconc, pconc
+ * and emag will be zeros.
+ * Arguments:
+ * lambda     wavelength (microns)
+ * temp       temperature (K)
+ * xcomp      composition fraction x
+ * ycomp      composition fraction y
+ * nconc      electron concentration (1/cc)
+ * pconc      hole concentration (1/cc)
+ * emag       magnitude of electric field (V/cm)
+ * eg         band gap (eV)
+ * *n         real part of index of refraction
+ * *k         imaginary part of index of refraction
+ */
+int nkeg(double lambda,double temp,double xcomp,double ycomp,double nconc,double pconc,double emag,double eg,double *n,double *k)
+{
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Reflection coefficient.
+ * Statement: BEAM
+ * Parameter: F.REFLECT
+ * Note 1: This function can only be used with LUMINOUS
+ * Note 2: poli should contain reflected polarization on return.
+ * Arguments:
+ * thetai     angle of incidence (radians)
+ * lambda     incident wavelength (microns)
+ * x          location x (microns)
+ * y          location y (microns)
+ * ni         incident real index
+ * ki         incident imaginary index
+ * nt         transmitted real index
+ * kt         transmitted imaginary index
+ * *thetat    angle of transmission (radians)
+ * *poli      incident polarization (radians)
+ * *polt      transmitted polarization (radians)
+ * *rc        reflection coefficient
+ */
+int reflect(double thetai,double lambda,double x,double y,double ni,double ki,double nt,double kt,double *thetat,double *poli,double *polt,double *rc)
+{
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Composition, temperature and doping dependent band gap narrowning
+ * Statement: MATERIAL
+ * Parameter: F.BGN
+ * Note: The asymmetry factor is specified using the ASYMMETRY parameter.
+ * Arguments:
+ * xcomp      composition fraction x
+ * ycomp      composition fraction y
+ * temp       temperature (K)
+ * na         acceptor concentration (per cc)
+ * nd         donor concentration (per cc)
+ * *deg       delta Eg (eV)
+ * *ddegdt    derivative of deg with respect to T
+ */
+int bgn(double xcomp,double ycomp,double temp,double na,double nd,double *deg,double *ddegdt)
+{
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Composition, temperature and doping dependent electron mobility
+ * Statement: MATERIAL
+ * Parameter: F.CONMUN
+ * Arguments:
+ * xcomp      composition fraction x
+ * ycomp      composition fraction y
+ * temp       temperature (K)
+ * nd         net concentration of donors (per cc)
+ * na         net concentration of acceptors (per cc)
+ * x          location x (microns)
+ * y          location y (microns)
+ * taun       electron SRH lifetime (s)
+ * *mun       electron mobility
+ * *mun       electron mobility
+ */
+int conmun(double xcomp,double ycomp,double temp,double nd,double na,double x,double y,double taun,double *mun)
+{
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Composition, temperature and doping dependent hole mobility
+ * Statement: MATERIAL
+ * Parameter: F.CONMUP
+ * Arguments:
+ * xcomp      composition fraction x
+ * ycomp      composition fraction y
+ * temp       temperature (K)
+ * nd         net concentration of donors (per cc)
+ * na         net concentration of acceptors (per cc)
+ * x          location x (microns)
+ * y          location y (microns)
+ * taup       hole SRH lifetime (s)
+ * *mup       hole mobility
+ */
+int conmup(double xcomp,double ycomp,double temp,double nd,double na,double x,double y,double taup,double *mup)
+{
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Composition, temperature and doping dependent low-field mobility
+ * Statement: MATERIAL
+ * Parameter: F.LOWFLDMU
+ * Arguments:
+ * x          location x (microns)
+ * y          location y (microns)
+ * z          location z (microns)
+ * xcomp      composition fraction x
+ * ycomp      composition fraction y
+ * temp       device temperature (as specified on the MODELS statement) (K)
+ * nd         donor concentration (cm^-3)
+ * na         acceptor concentration (cm^-3)
+ * *mun       electron low-field mobility
+ * *mup       hole low-field mobility
+ * *tmun      electron mobility lattice temperature coefficient
+ * *tmup      hole mobility lattice temperature coefficient
+ */
+int lowfldmu(double x,double y,double z,double xcomp,double ycomp,double temp,double nd,double na,double *mun,double *mup,double *tmun,double *tmup)
+{
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Optical intensity as a function of position
+ * Statement: BEAM
+ * Parameter: F.INTENSITY
+ * Arguments:
+ * x          location x (microns)
+ * y          location y (microns)
+ * z          location z (microns)
+ * wavelength wavelength (microns)
+ * t          time (seconds )
+ * *inten     optical intensity (W/sqcm)
+ */
+int intensity(double x, double y, double z, double t, double wavelength, double *inten)
+{
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Generation rate as a function of position
+ * Statement: BEAM
+ * Parameter: F.RADIATE
+ * Arguments:
+ * x          location x (microns)
+ * y          location y (microns)
+ * z          location z (microns)
+ * t          time (seconds )
+ * *rat       generation rate per cc per sec.
+ */
+int radiate(double x,double y,double z,double t,double *rat)
+{
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Generation rate as a function of position (3D)
+ * Statement: BEAM
+ * Parameter: F3.RADIATE
+ * Arguments:
+ * x          location x (microns)
+ * y          location y (microns)
+ * z          location z (microns)
+ * t          time (seconds )
+ * *rat       generation rate per cc per sec.
+ */
+int radiate3(double x,double y,double z,double t,double *rat)
+{
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Electron SRH lifetime as a function of position
+ * Statement: MATERIAL
+ * Parameter: F.TAUN
+ * Arguments:
+ * x          location x (microns)
+ * y          location y (microns)
+ * temp       temperature (K)
+ * nd         net concentration of donors (per cc)
+ * na         net concentration of acceptors (per cc)
+ * *taun      electron SRH lifetime (s)
+ */
+int taun(double x,double y,double temp,double nd, double na,double *taun)
+{
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Hole SRH lifetime as a function of position
+ * Statement: MATERIAL
+ * Parameter: F.TAUP
+ * Arguments:
+ * x          location x (microns)
+ * y          location y (microns)
+ * temp       temperature (K)
+ * nd         net concentration of donors (per cc)
+ * na         net concentration of acceptors (per cc)
+ * *taup      hole SRH lifetime (s)
+ */
+int taup(double x,double y,double temp,double nd, double na,double *taup)
+{
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Radiative recombination rate as a function of composition and temperature.
+ * Statement: MATERIAL
+ * Parameter: F.COPT
+ * Arguments:
+ * temp       temperature (K)
+ * xcomp      composition fraction x
+ * ycomp      composition fraction y
+ * *cop       radiative recomb. rate per cc per s
+ */
+int copt(double temp,double xcomp,double ycomp,double *cop)
+{
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Electron Auger rate as a function of composition and temperature.
+ * Statement: MATERIAL
+ * Parameter: F.GAUN
+ * Arguments:
+ * temp       temperature (K)
+ * xcomp      composition fraction x
+ * ycomp      composition fraction y
+ * *gan       elect. Auger recomb. rate (cm^6/s)
+ */
+int gaun(double temp,double xcomp,double ycomp,double *gan)
+{
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Hole Auger rate as a function of composition and temperature.
+ * Statement: MATERIAL
+ * Parameter: F.GAUP
+ * Arguments:
+ * temp       temperature (K)
+ * xcomp      composition fraction x
+ * ycomp      composition fraction y
+ * *gap       hole. Auger recomb. rate (cm^6/s)
+ */
+int gaup(double temp,double xcomp,double ycomp,double *gap)
+{
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Interface fixed charge as a function of position.
+ * Statement: INTERFACE
+ * Parameter: F.QF
+ * Arguments:
+ * x          location x (microns)
+ * y          location y (microns)
+ * *fixed     interface charge per sqcm
+ */
+int int_fixed_charge(double x,double y,double *fixed)
+{
+	return(0);
+}
+
+/*
+ * Interface acceptor trap density as a function of location
+ * Statement: DEGREDATIONPARAM
+ * Parameter: F.NTA
+ * Arguments:
+ * x          location x (microns)
+ * y          location y (microns)
+ * *nta       interface acceptor trap density per sqcm
+ */
+int devdeg_nta(double x,double y,double *nta)
+{
+	return(0);
+}
+
+/*
+ * Interface donor trap density as a function of location
+ * Statement: DEGREDATIONPARAM
+ * Parameter: F.NTD
+ * Arguments:
+ * x          location x (microns)
+ * y          location y (microns)
+ * *ntd       interface donor trap density per sqcm
+ */
+int devdeg_ntd(double x,double y,double *ntd)
+{
+	return(0);
+}
+
+/*
+ * Interface electron capture cross section
+ * Statement: DEGREDATIONPARAM
+ * Parameter: F.SIGMAE
+ * Arguments:
+ * x          location x (microns)
+ * y          location y (microns)
+ * *sigmae    electron capture cross section sqcm
+ */
+int devdeg_sigmae(double x,double y,double *sigmae)
+{
+	return(0);
+}
+
+/*
+ * Interface hole capture cross section
+ * Statement: DEGREDATIONPARAM
+ * Parameter: F.SIGMAH
+ * Arguments:
+ * x          location x (microns)
+ * y          location y (microns)
+ * *sigmah    hole capture cross section sqcm
+ */
+int devdeg_sigmah(double x,double y,double *sigmah)
+{
+	return(0);
+}
+
+/*
+ * Acceptor trap density as a function of location
+ * Statement: TRAP (ACCEPTOR)
+ * Parameter: F.DENSITY
+ * Arguments:
+ * x          location x (microns)
+ * y          location y (microns)
+ * z          location z (microns)
+ * *density   interface acceptor trap density(cm^-3)
+ */
+int acc_trap(double x,double y,double z,double *density)
+{
+    if (density == NULL)
+    {
+        printf("Error: density pointer is NULL\n");
+        return(1); // 返回错误码
+	}
+    
+    // 计算高斯分布的密度
+    *density = (*density) * exp(-pow(y - 0.0, 2) / (2 * pow(1.0, 2)));
+    
+    // 如果密度小于最终密度，则设置为最终密度
+    if (*density < 1.0e15) {
+        *density = 1.0e15;
+    }
+
+    printf("acc_trap called with x=%.2f, y=%.2f, z=%.2f, d=%.2f\n", x, y, z,*density);
+
+    return(0);
+}
+
+/*
+ * Donor trap density as a function of location
+ * Statement: TRAP (DONOR)
+ * Parameter: F.DENSITY
+ * Arguments:
+ * x          location x (microns)
+ * y          location y (microns)
+ * z          location z (microns)
+ * *density   interface donor trap density per cm^3
+ */
+int don_trap(double x,double y,double z,double *density)
+{
+    if (density == NULL)
+    {
+        printf("Error: density pointer is NULL\n");
+        return(1); // 返回错误码
+    }
+	
+    *density = *density - (*density - 1.0e15) * exp(-pow(((y - 100.0) / 100.0 - 1.0), 2) / (2 * pow(1.0, 2)));  // 密度递增
+
+	printf("don_trap called with x=%.2f, y=%.2f, z=%.2f, d=%.2f\n", x, y, z,*density);
+
+	return(0);
+}
+
+/*
+ * Interface acceptor trap density as a function of location
+ * Statement: INTTRAP (ACCEPTOR)
+ * Parameter: F.DENSITY
+ * Arguments:
+ * x          location x (microns)
+ * y          location y (microns)
+ * *density   interface acceptor trap density per sqcm
+ */
+int int_acc_trap(double x,double y,double *density)
+{
+	return(0);
+}
+
+/*
+ * Interface donor trap density as a function of location
+ * Statement: INTTRAP (DONOR)
+ * Parameter: F.DENSITY
+ * Arguments:
+ * x          location x (microns)
+ * y          location y (microns)
+ * *density   interface donor trap density per sqcm
+ */
+int int_don_trap(double x,double y,double *density)
+{
+	return(0);
+}
+
+/*
+ * Trap electron emission rate as a function of location and time
+ * Statement: TRAP or INTTRAP
+ * Parameter: F.E0N
+ * Arguments:
+ * x          location x (microns)
+ * y          location y (microns)
+ * z          location z (microns)
+ * time       time (seconds)
+ * type       trap type (0=donors, 1=acceptors)
+ * et         trap energy level (eV)
+ * *e0n       electron emission rate (seconds^-1)
+ */
+int e0n_trap(double x,double y,double z,double time,int type,double et,double *e0n)
+{
+	return(0);
+}
+
+/*
+ * Trap hole emission rate as a function of location and time
+ * Statement: TRAP or INTTRAP
+ * Parameter: F.E0N
+ * Arguments:
+ * x          location x (microns)
+ * y          location y (microns)
+ * z          location z (microns)
+ * time       time (seconds)
+ * type       trap type (0=donors, 1=acceptors)
+ * et         trap energy level (eV)
+ * *e0n       hole emission rate (seconds^-1)
+ */
+int e0p_trap(double x,double y,double z,double time,int type,double et,double *e0p)
+{
+	return(0);
+}
+
+
+/*
+ * TFT donor trap density as function of energy
+ * Statement: DEFECTS
+ * Parameter: F.TFTDON
+ * Arguments:
+ * energy     energy relative to valence band (eV)
+ * eg         band gap (eV)
+ * *density   tft donor trap density (cm^-3)
+ * *sigmae    donor trap electron capture cross-section
+ * *sigmah    donor trap hole capture cross-section
+ */
+int tftdon(double energy,double eg,double *density,double *sigmae,double *sigmah)
+{
+	return(0);
+}
+
+/*
+ * TFT acceptor trap density as function of energy
+ * Statement: DEFECTS
+ * Parameter: F.TFTACC
+ * Arguments:
+ * energy     energy relative to conduction band (eV)
+ * eg         band gap (eV)
+ * *density   tft acceptor trap density (cm^-3)
+ * *sigmae    donor trap electron capture cross-section
+ * *sigmah    donor trap hole capture cross-section
+ */
+int tftacc(double energy,double eg,double *density,double *sigmae,double *sigmah)
+{
+	return(0);
+}
+
+/*
+ * Defect definition
+ * Statement: DEFECTS
+ * Parameter: F.DEFECTS
+ * Arguments:
+ * x          location x (microns)
+ * y          location y (microns)
+ * z          location z (microns)
+ * *nta       density of acceptor-like tail states (cm^-3/eV)
+ * *wta       characteristic decay energy for acceptor-like tail states (eV)
+ * *nga       density of acceptor-like Gaussian states (cm^-3/eV)
+ * *wga       characteristic decay energy for acceptor-like Gaussian states (eV)
+ * *ega       peak energy for acceptor-like Gaussian states (eV)
+ * *ntd       density of donor-like tail states (cm^-3/eV)
+ * *wtd       characteristic decay energy for donor-like tail states (eV)
+ * *ngd       density of donor-like Gaussian states (cm^-3/eV)
+ * *wgd       characteristic decay energy for donor-like Gaussian states (eV)
+ * *egd       peak energy for donor-like Gaussian states (eV)
+ */
+//定义种子数，每次运行仿真时才会变动
+//srand(seed);
+
+int defects(double x, double y, double z, double *nta, double *wta, double *nga, double *wga, double *ega, double *ntd, double *wtd, double *ngd, double *wgd, double *egd)
+{
+
+    if (nga == NULL || ngd==NULL)
+    {
+        printf("Error: nga/ngd pointer is NULL\n");
+        return(1); // 返回错误码
+    }
+
+	if (y>=100.0){
+		//2024.10.26 ngd和nga的数值等于掺杂浓度，因此在这里对缺陷密度乘以一个比例
+		//*ngd = *ngd * (*ngd / 1e20) * 0.5 * 1e-3 * exp(-pow(1-modf(y, &y), 2) / 2*pow(2,2));//ngd递增
+		*ngd = *ngd * exp(-pow(1-modf(y, &y), 2) / 2*pow(2,2));//ngd递增
+		*nga = *nga * exp(-pow(1-modf(y, &y), 2) / 2*pow(2,2));
+	}
+    else{
+		*nga = (*nga) * exp(-pow(y, 2) / 2*pow(2.5,2));//nga递减
+		*ngd = (*ngd) * exp(-pow(y, 2) / 2*pow(2.5,2));
+	}
+	//if(*ngd<1.0e15){*ngd=1.0e15;}
+	//if(*nga<1.0e15){*nga=1.0e15;}
+	printf("f.defects called with x=%.2f, y=%.2f, nga=%.3e, ngd=%.3e\n", x, y,*nga,*ngd);
+
+	return(0);
+}
+
+
+/*
+ * Defect definition
+ * Statement: INTDEFECTS
+ * Parameter: F.INTDEFECTS
+ * Arguments:
+ * x          location x (microns)
+ * y          location y (microns)
+ * z          location z (microns)
+ * *nta       density of acceptor-like tail states (cm^-2/eV)
+ * *wta       characteristic decay energy for acceptor-like tail states (eV)
+ * *nga       density of acceptor-like Gaussian states (cm^-2/eV)
+ * *wga       characteristic decay energy for acceptor-like Gaussian states (eV)
+ * *ega       peak energy for acceptor-like Gaussian states (eV)
+ * *ntd       density of donor-like tail states (cm^-2/eV)
+ * *wtd       characteristic decay energy for donor-like tail states (eV)
+ * *ngd       density of donor-like Gaussian states (cm^-2/eV)
+ * *wgd       characteristic decay energy for donor-like Gaussian states (eV)
+ * *egd       peak energy for donor-like Gaussian states (eV)
+ */
+int intdefects(double x, double y, double z, double *nta, double *wta, double *nga, double *wga, double *ega, double *ntd, double *wtd, double *ngd, double *wgd, double *egd)
+{
+	return(0);
+}
+
+/*
+ * Defect definition
+ * Statement: ODEFECTS
+ * Parameter: F.ODEFECTS
+ * Arguments:
+ * x          location x (microns)
+ * y          location y (microns)
+ * z          location z (microns)
+ * *ha        acceptor density of states (cm^-3/eV)
+ * *tca       acceptor characteristic temperature (K)
+ * *hd        donor density of states (cm^-3/eV)
+ * *tcd       donor characteristic temperature (K)
+ * *nia       acceptor total intrinsic trap density (cm^-3/eV)
+ * *sigmia    acceptor intrinsic trap Gaussian width (eV)
+ * *na        acceptor total doping trap density (cm^-3/eV)
+ * *sigma     acceptor doping trap Gaussian width (eV)
+ * *ea        acceptor energy shift between instrinsic and doping traps (eV)
+ * *nid       donor total intrinsic trap density (cm^-3/eV)
+ * *sigmid    donor intrinsic trap Gaussian width (eV)
+ * *nd        donor total doping trap density (cm^-3/eV)
+ * *sigmd     donor doping trap Gaussian width (eV)
+ * *ed        donor energy shift between instrinsic and doping traps (eV)
+ */
+int odefects(double x, double y, double z, double *ha, double *tca, double *hd, double *tcd, double *nia, double *sigmaia, double *na, double *sigmaa, double *ea, double *nid, double *sigmaid, double *nd, double *sigmad, double *ed)
+{
+	return(0);
+}
+
+/*
+ * Defect definition
+ * Statement: OINTDEFECTS
+ * Parameter: F.OINTDEFECTS
+ * Arguments:
+ * x          location x (microns)
+ * y          location y (microns)
+ * z          location z (microns)
+ * *ha        acceptor density of states (cm^-2/eV)
+ * *tca       acceptor characteristic temperature (K)
+ * *hd        donor density of states (cm^-2/eV)
+ * *tcd       donor characteristic temperature (K)
+ * *nia       acceptor total intrinsic trap density (cm^-2/eV)
+ * *sigmia    acceptor intrinsic trap Gaussian width (eV)
+ * *na        acceptor total doping trap density (cm^-2/eV)
+ * *sigma     acceptor doping trap Gaussian width (eV)
+ * *ea        acceptor energy shift between instrinsic and doping traps (eV)
+ * *nid       donor total intrinsic trap density (cm^-2/eV)
+ * *sigmid    donor intrinsic trap Gaussian width (eV)
+ * *nd        donor total doping trap density (cm^-2/eV)
+ * *sigmd     donor doping trap Gaussian width (eV)
+ * *ed        donor energy shift between instrinsic and doping traps (eV)
+ */
+int ointdefects(double x, double y, double z, double *ha, double *tca, double *hd, double *tcd, double *nia, double *sigmaia, double *na, double *sigmaa, double *ea, double *nid, double *sigmaid, double *nd, double *sigmad, double *ed)
+{
+	return(0);
+}
+
+/*
+ * Interface TFT donor trap density as function of energy
+ * Statement: INTDEFECTS
+ * Parameter: F.TFTDON
+ * Arguments:
+ * energy     energy relative to valence band (eV)
+ * eg         band gap (eV)
+ * *density   tft donor trap density (cm^-2)
+ * *sigmae    donor trap electron capture cross-section
+ * *sigmah    donor trap hole capture cross-section
+ */
+int inttftdon(double energy,double eg,double *density,double *sigmae,double *sigmah)
+{
+	return(0);
+}
+
+/*
+ * Interface TFT acceptor trap density as function of energy
+ * Statement: INTDEFECTS
+ * Parameter: F.TFTACC
+ * Arguments:
+ * energy     energy relative to conduction band (eV)
+ * eg         band gap (eV)
+ * *density   tft acceptor trap density (cm^-2)
+ * *sigmae    acceptor trap electron capture cross-section
+ * *sigmah    acceptor trap hole capture cross-section
+ */
+int inttftacc(double energy,double eg,double *density,double *sigmae,double *sigmah)
+{
+	return(0);
+}
+
+/*
+ * Organic TFT donor trap density as function of energy
+ * Statement: ODEFECT
+ * Parameter: F.OTFTDON
+ * Arguments:
+ * energy     energy relative to valence band (eV)
+ * *density   tft donor trap density (cm^-3)
+ */
+int otftdon(double energy,double *density)
+{
+	return(0);
+}
+
+/*
+ * Organic TFT acceptor trap density as function of energy
+ * Statement: ODEFECT
+ * Parameter: F.OTFTACC
+ * Arguments:
+ * energy     energy relative to conduction band (eV)
+ * *density   tft acceptor trap density (cm^-3)
+ */
+int otftacc(double energy,double *density)
+{
+	return(0);
+}
+
+/*
+ * Organic INTTFT donor trap density as function of energy
+ * Statement: OINTDEFECT
+ * Parameter: F.OINTTFTDON
+ * Arguments:
+ * energy     energy relative to valence band (eV)
+ * *density   tft donor trap density (cm^-2)
+ */
+int ointtftdon(double energy,double *density)
+{
+	return(0);
+}
+
+/*
+ * Organic INTTFT acceptor trap density as function of energy
+ * Statement: OINTDEFECT
+ * Parameter: F.OINTTFTACC
+ * Arguments:
+ * energy     energy relative to conduction band (eV)
+ * *density   tft acceptor trap density (cm^-2)
+ */
+int ointtftacc(double energy,double *density)
+{
+	return(0);
+}
+
+/*
+ * Calculates electron temperature coefficients for
+ * impact ionization
+ * Statement: IMPACT
+ * Parameter: F.EDIIN
+ * Arguments:
+ * tn     electron temperature
+ * *an    "an" parameter for electrons
+ * *betan "beta" parameter for electrons
+ * *bn    "bn" parameter for electrons
+ */
+int ediin(double tn,double *an,double *betan,double *bn)
+{
+	return(0);
+}
+
+/*
+ * Calculates hole temperature coefficients for
+ * impact ionization
+ * Statement: IMPACT
+ * Parameter: F.EDIIP
+ * Arguments:
+ * tp     hole temperature
+ * *ap    "ap" parameter for holes
+ * *betap "beta" parameter for holes
+ * *bp    "bp" parameter for holes
+ */
+int ediip(double tp,double *ap,double *betap,double *bp)
+{
+	return(0);
+}
+
+/*
+ * Energy dependent electron relaxation time
+ * Statement: MATERIAL
+ * Parameter: F.TAURN
+ * Arguments:
+ * wn         electron energy (eV) (wn=1.5*Kb*Tn/q)
+ * wl         lattice energy (eV)  (wl=1.5*Kb*Tl/q)
+ * *taurn     electron relaxation time (s)
+ * *dtaurn    derivative of taurn with respect to wn
+ * *dtaurl    derivative of taurn with respect to wl
+ */
+int taurn(double wn,double wl,double *taurn,double *dtaurn,double *dtaurl)  
+{
+	*(taurn) = 0.0;
+	*(dtaurn) = 0.0;
+        *(dtaurl) =0.0;
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Energy dependent hole relaxation time
+ * Statement: MATERIAL
+ * Parameter: F.TAURP
+ * Arguments:
+ * wp         hole energy (eV) (wp=1.5*Kb*Tp/q)
+ * wl         lattic energy (eV) (wl=1.5*Kb*Tl/q)
+ * *taurp     hole relaxation time (s)
+ * *dtaurp    derivative of taurp with respect to wp
+ * *dtaurl    derivative of taurp with respect to wl
+ */
+int taurp(double wp,double wl,double *taurp,double *dtaurp,double *dtaurl)  
+{
+	*(taurp) = 0.0;
+	*(dtaurp) = 0.0;
+        *(dtaurl) =0.0;
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Energy dependent electron scattering law exponent
+ * Statement: MODELS
+ * Parameter: F.KSN
+ * Arguments:
+ * wn         electron energy (eV) (wn=1.5*Kb*Tn/q)
+ * *ksn       electron scattering law exponent
+ * *dksn      derivative of ksn with respect to wn
+ */
+int fksn(double wn,double *ksn,double *dksn)  
+{
+	*(ksn) = 0.0;
+	*(dksn) = 0.0;
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Energy dependent hole scattering law exponent
+ * Statement: MODELS
+ * Parameter: F.KSP
+ * Arguments:
+ * wp         hole energy (eV) (wp=1.5*Kb*Tp/q)
+ * *ksp       hole scattering law exponent
+ * *dksp      derivative of ksp with respect to wp
+ */
+int fksp(double wp,double *ksp,double *dksp)  
+{
+	*(ksp) = 0.0;
+	*(dksp) = 0.0;
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Bulk absorption.
+ * Statement: MATERIAL
+ * Parameter: F.ALPHAA
+ * n          electron concentration (cm^-3)
+ * p          hole concentration (cm^-3)
+ * energy     photon energy (eV)
+ * *alphaa    return: bulk absorption coeffiecient (cm^-1)
+ */
+int bulk_absorb(double n,double p,double energy,double *alphaa)   
+{
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Trap tunneling
+ * Statement: MODELS
+ * Parameter: F.TRAP.TUNNEL
+ * et           energy separation (eV) 
+ * ef           Electric field (V/cm) 
+ * temp         Device temperature (K) 
+ * mstar        mass (relative * m0) (kg) 
+ * *gamma       return: enhancement factor 
+ * *dgamma      return: derivative of gamma wrt electric field 
+ */
+int ftraptunnel(double et, double ef, double temp, double mstar, double *gamma, double *dgamma)
+{       
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Trap tunneling
+ * Statement: MODELS
+ * Parameter: F.TRAP.COULOMBIC
+ * et           energy separation (eV) 
+ * ef           Electric field (V/cm) 
+ * temp         Device temperature (K) 
+ * mstar        mass (relative * m0) (kg) 
+ * *gamma       return: enhancement factor 
+ * *dgamma      return: derivative of gamma wrt electric field 
+ */
+int ftrapcoulombic(double et, double ef, double temp, double mstar, double *gamma, double *dgamma)
+{       
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Schottky contact electron tunneling model
+ * Statement: CONTACTS
+ * Parameter: F.ETUNNEL
+ * 
+ * V            Applied potential (V) 
+ * conc         electonr concentration (1/cm^3)
+ * ef           Electric field (V/cm) 
+ * phi0         Barrier Energy (eV) 
+ * richardson   Richardson's constant (A cm^-2 K^-2)
+ * mstar        effective mass (kg) 
+ * temp         Device temperature (K) 
+ * *J           return: current density  (A cm^-2)
+ * *dJdN        return: derivative of current density wrt carrier concentration 
+ * *dJdV        return: derivative of current density wrt applied potential 
+ * *dJdE        return: derivative of current density wrt electric field 
+ */
+int fetunnel(double V, double conc, double ef, double phi0, double richardson, double mstar, double temp, double *J, double *dJdN, double *dJdV, double *dJdE)
+{       
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Schottky contact hole tunneling model
+ * Statement: CONTACTS
+ * Parameter: F.HTUNNEL
+ * 
+ * V            Applied potential (V) 
+ * conc         hole concentration (1/cm^3)
+ * ef           Electric field (V/cm) 
+ * phi0         Barrier Energy (eV) 
+ * richardson   Richardson's constant (A cm^-2 K^-2)
+ * mstar        effective mass (kg) 
+ * temp         Device temperature (K) 
+ * *J           return: current density  (A cm^-2)
+ * *dJdN        return: derivative of current density wrt carrier concentration 
+ * *dJdV        return: derivative of current density wrt applied potential 
+ * *dJdE        return: derivative of current density wrt electric field 
+ */
+int fhtunnel(double V, double conc, double ef, double phi0, double richardson, double mstar, double temp, double *J, double *dJdN, double *dJdV, double *dJdE)
+{       
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Thermal conductivity in GIGA
+ * Statement: MATERIAL
+ * Parameter: F.TCOND
+
+ * Tl           Lattice temperature (K)
+ * x            Location x (microns)
+ * y            Location y (microns)
+ * z            Location z (microns)
+ * nd           Donor doping concentration (cm^-3)
+ * na           Acceptor doping concentration (cm^-3)
+ * xcomp	Composition fraction "X"
+ * ycomp        Composition fraction "Y"
+ * cond         return: Thermal conductivity (W/cm K) 
+ * dconddt	return: Derivative of thermal conductivity wrt lattice temperature 
+ */
+int tcond(double Tl, double x, double y, double z, double nd, double na, double xcomp, double ycomp, double *cond, double *dconddt)
+{
+/*
+ * The following body is set up to emulate the default function implemented
+ * in ATLAS for silicon and polysilicon materials
+ */
+	double a,b,c;
+	a=0.03;
+	b=0.00156;
+	c=1.65e-6;
+	*cond=1.0/(a+Tl*(b+Tl*c));
+	*dconddt=-(*cond)*(*cond)*(b+2.0*c*Tl);
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Thermal capacity in GIGA
+ * Statement: MATERIAL
+ * Parameter: F.TCAP
+
+ * Tl           Lattice temperature (K)
+ * x            Location x (microns)
+ * y            Location y (microns)
+ * z            Location z (microns)
+ * nd           Donor doping concentration (cm^-3)
+ * na           Acceptor doping concentration (cm^-3)
+ * xcomp	Composition fraction "X"
+ * ycomp        Composition fraction "Y"
+ * cap          return: Thermal capacity (W/K cm^3) 
+ * dcapdt	return: Derivative of thermal capacity wrt lattice temperature 
+ */
+int tcap(double Tl, double x, double y, double z, double nd, double na, double xcomp, double ycomp, double *cap, double *dcapdt)
+{
+/*
+ * The following body is set up to emulate the default function implemented
+ * in ATLAS for silicon and polysilicon materials
+ */
+        double a,b,c,d;
+	a=1.97;
+	b=0.00036;
+	c=0.0;
+	d=-37000.0;
+	*cap=a+Tl*(b+Tl*c)+d/(Tl*Tl);
+	*dcapdt=b+2.0*c*Tl-2.0*d/(Tl*Tl*Tl); 
+	return(0);                /* 0 - ok */
+
+}
+
+/*
+ * Mirror reflection coefficient.
+ * Statement: LASER
+ * Parameter: F.MIRROR
+ * Arguments:
+ * lambda      wavelength (microns)
+ * *rf         return: front facet reflection coefficient (%)
+ * *rr         return: rear facet reflection coefficient (%)
+ */
+int mirror(double lambda,double *rf,double *rr)
+{
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Time dependent thermal contact temperature.
+ * Statement: THERMCONTACT
+ * Parameter: F.CONTEMP
+ * Arguments:
+ * time       Simulation time (sec.)
+ * *temp      Thermal contact temperature (K)
+ */
+int contemp(double time, double *temp)
+{
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Microscopic Noise Source for electron diffusion noise.
+ * Statement: MATERIAL
+ * Parameter: F.MNSNDIFF
+ * Arguments:
+ * xcomp      composition fraction x
+ * ycomp      composition fraction y
+ * temp       lattice temperature (K)
+ * n          electron concentration (cm^-3)
+ * mun        electron mobility (cm^2/V s)
+ * e          electric field (V/cm)
+ * *mns       microscopic noise source (s A^2 / cm)
+ */
+int mnsndiff(double xcomp, double ycomp, double temp, double n, double mun, double e, double *mns)
+{
+/*
+ * The following body is set up to emulate the default function
+ * implemented in ATLAS.
+ *
+ * The mns is 4.q^2.n.D, where D is the diffusion coefficient given
+ * by the Einstein relationship D=(kT/q).mun
+ */
+        const double q=1.602e-19;
+        const double k=1.381e-23;
+        double d;
+
+        d=(k*temp / q) * mun;
+        *mns=4.0*q*q*n*d;
+
+        return(0);                /* 0 - ok */
+}
+
+/*
+ * Microscopic Noise Source for hole diffusion noise.
+ * Statement: MATERIAL
+ * Parameter: F.MNSPDIFF
+ * Arguments:
+ * xcomp      composition fraction x
+ * ycomp      composition fraction y
+ * temp       lattice temperature (K)
+ * p          hole concentration (cm^-3)
+ * mup        hole mobility (cm^2 / V s)
+ * e          electric field (V / cm)
+ * *mns       microscopic noise source (s A^2 / cm)
+ */
+int mnspdiff(double xcomp, double ycomp, double temp, double p, double mup, double e, double *mns)
+{
+/*
+ * The following body is set up to emulate the default function
+ * implemented in ATLAS.
+ *
+ * The mns is 4.q^2.p.D, where D is the diffusion coefficient given
+ * by the Einstein relationship D=(kT/q).mup
+ */
+        const double q=1.602e-19;
+        const double k=1.381e-23;
+        double d;
+
+        d=(k*temp / q) * mup;
+        *mns=4.0*q*q*p*d;
+
+        return(0);                /* 0 - ok */
+}
+
+/*
+ * Microscopic Noise Source for electron flicker (1/f) noise.
+ * Statement: MATERIAL
+ * Parameter: F.MNSNFLICKER
+ * Arguments:
+ * x          location x (microns)
+ * y          location y (microns)
+ * temp       lattice temperature (K)
+ * n          electron concentration (cm^-3)
+ * jn         electron current density (A / cm^2)
+ * f          frequency (Hz)
+ * e          electric field (V / cm)
+ * *mns       microscopic noise source (s A^2 / cm)
+ */
+int mnsnflicker(double x, double y, double temp, double n, double jn, double f, double e, double *mns)
+{
+/*
+ * The following body is set up to emulate the default function
+ * implemented in ATLAS.
+ *
+ * The mns is (alpha/f)*(j^2/n), where alpha is the Hooge constant.
+ */
+        const double alpha=2.0e-3;
+
+        *mns= (n > 1.0) ? (alpha/f) * (jn*jn/n) : 0.0;
+
+        return (0);
+}
+
+/*
+ * Microscopic Noise Source for hole flicker (1/f) noise.
+ * Statement: MATERIAL
+ * Parameter: F.MNSPFLICKER
+ * Arguments:
+ * x          location x (microns)
+ * y          location y (microns)
+ * temp       lattice temperature (K)
+ * p          hole concentration (cm^-3)
+ * jp         hole current density (A / cm^2)
+ * f          frequency (Hz)
+ * e          electric field (V / cm)
+ * *mns       microscopic noise source (s A^2 / cm)
+ */
+int mnspflicker(double x, double y, double temp, double p, double jp, double f, double e, double *mns)
+{
+/*
+ * The following body is set up to emulate the default function
+ * implemented in ATLAS.
+ *
+ * The mns is (alpha/f)*(j^2/n), where alpha is the Hooge constant.
+ */
+        const double alpha=2.0e-3;
+
+        *mns= (p > 1.0) ? (alpha/f) * (jp*jp/p) : 0.0;
+
+        return (0);
+}
+
+
+/* Example C-interpreter function for Valence band effective density of
+ states as a function of Temperature [ NV (T) ] 
+ * Statement: MATERIAL
+ * Parameter: F.VBDOSFN
+ */
+/* Input variables 
+ * xcomp - composition x-fraction if ternary or quaternary alloy
+ * ycomp - composition y-fraction if quaternary alloy 
+ *  temp  - Carrier temperature in Kelvin  */
+/* Output variables
+   *nv - density of states in /c.c.  
+   *dnvdt - d (*nv) / d (temp) in ) in /c.c./Kelvin  
+   (Note 1 : an exact derivative is not required, but a poor approximation 
+    of the derivative may compromise convergence properties).
+   (Note 2 : a complete implementation is included for instructional
+    purposes. Replace with your model. */
+
+int vbdosfn(double xcomp,double ycomp,double temp, double* nv, double* dnvdt)
+{
+
+/*
+ * The following body is set up to emulate the default function
+ * implemented in ATLAS, where NV300 is the valence band effective
+ * density of states for the material at 300 K
+ */
+	double NV300 = 1.0e19;
+
+	(*nv) = NV300 * pow(temp/300.0,1.5);
+	(*dnvdt) = 1.5 * NV300/300.0 * pow(temp/300.0,0.5);
+
+	return(0);  /*  0 - ok */
+}
+
+/* Example C-interpreter function for Conduction band density of states as a
+function of Temperature NC (T) 
+ * Statement: MATERIAL
+ * Parameter: F.CBDOSFN
+ */
+/* Input variables 
+ *  xcomp - composition x-fraction if ternary or quaternary alloy
+ *  ycomp - composition y-fraction if quaternary alloy 
+ *  temp  - Carrier temperature in Kelvin  */
+/* Output variables
+   *nc - density of states in /c.c.  
+   *dncdt - d (*nc) / d (temp) in ) in /c.c./Kelvin  
+   (Note 1 : an exact derivative is not required, but a poor approximation 
+    of the derivative may compromise convergence properties).
+   (Note 2 : a complete implementation for a two-valley model is
+    included for instructional purposes. Replace with your model. */
+
+
+int cbdosfn(double xcomp,double ycomp,double temp, double* nc, double* dncdt)
+{
+	double dos[3]={4.351915487E17,1.13552E19,2.12393E19};
+	double factor,dfactordt,alpha=0.001,T0=400.0;
+	double tempdep,dtempdepdt;
+
+	factor = 1.0/(1.0+exp(alpha*(temp-T0)));
+
+	tempdep=pow(temp/300.0,1.5);
+
+	dtempdepdt=1.5*pow(temp/300.0,0.5)/300.0;
+
+	dfactordt=-alpha*exp(alpha*(temp-T0))*factor*factor;
+
+	*nc = factor*dos[0]*pow(temp/300.0,1.5) + (1.0-factor)*dos[1]*pow(temp/300.0,1.5);
+
+	*dncdt = (dtempdepdt*factor+dfactordt*tempdep)*(dos[0]-dos[1]) + dos[1]*dtempdepdt;
+
+	return(0);
+}
+
+/*
+ * General carrier temperature dependent mobility model for electrons.
+ * Statement: MATERIAL/MOBILITY
+ * Parameter: F.ENMUN
+ * Arguments:
+ * Eperp    [in] - perpendicular electric field (V/cm)
+ * Na       [in] - acceptor concentration  (/cm^3)
+ * Nd       [in] - donor concentration     (/cm^3)
+ * nconc    [in] - electron concentration  (/cm^3)
+ * Tn       [in] - electron temperature    (K)
+ * TL       [in] - lattice temperature     (K)
+ * xcomp    [in] - x-species fraction      (0-1)
+ * ycomp    [in] - y-species fraction      (0-1)
+ * 
+ * *mun     [return] - mobility (cm^2/Vs)
+ * *dmundep [return] - derivative of *mun wrt Eperp
+ * *dmundl  [return] - derivative of *mun wrt TL
+ * *dmundtn [return] - derivative of *mun wrt Tn
+ * *dmundn  [return] - derivative of *mun wrt nconc 
+ *
+ */
+
+int endepmun(double Eperp, double Na, double Nd, double nconc, double Tn, double TL, double xcomp, double ycomp, double* mun, double* dmundep, double* dmundl, double* dmundtn, double *dmundn)
+{
+/* Example, Constant Low field mobility from ATLAS manual */
+
+	double tmun=1.0,nmu=8000.0;
+
+	*mun=nmu*pow(TL/300.0,-tmun);
+
+	*dmundep=0.0;
+	*dmundl= - tmun * (*mun) / TL;
+	*dmundtn=0.0;
+	*dmundn=0.0;
+
+	return(0);
+}
+
+/*
+ * General carrier temperature dependent mobility model for holes.
+ * Statement: MATERIAL/MOBILITY
+ * Parameter: F.ENMUP
+ * Arguments:
+ * Eperp    [in] - perpendicular electric field (V/cm)
+ * Na       [in] - acceptor concentration  (/cm^3)
+ * Nd       [in] - donor concentration     (/cm^3)
+ * pconc    [in] - hole concentration      (/cm^3)
+ * Tp       [in] - hole temperature        (K)
+ * TL       [in] - lattice temperature     (K)
+ * xcomp    [in] - x-species fraction      (0-1)
+ * ycomp    [in] - y-species fraction      (0-1)
+ * 
+ * *mup     [return] - hole mobility (cm^2/Vs)
+ * *dmupdep [return] - derivative of *mup wrt Eperp
+ * *dmupdl  [return] - derivative of *mup wrt TL
+ * *dmupdtp [return] - derivative of *mup wrt Tp
+ * *dmupdp  [return] - derivative of *mup wrt pconc
+*/
+
+int endepmup(double Eperp, double Na, double Nd, double pconc, double Tp, double TL, double xcomp, double ycomp, double *mup, double *dmupdep, double *dmupdl, double *dmupdtp, double *dmupdp)
+{
+/* Example, Constant Low field mobility for GaAS from ATLAS manual */
+
+	double tmup=2.1,pmu=400.0;
+
+	*mup=pmu*pow(TL/300.0,-tmup);
+
+	*dmupdep= 0.0;
+	*dmupdl = -tmup* (*mup)/TL;
+	*dmupdtp= 0.0;
+	*dmupdp = 0.0;
+
+	return(0);
+}
+
+/*
+ * Field dependent work function
+ * Statement: CONTACT
+ * Parameter: F.WORKF
+ * Arguments:
+ * e          electric field
+ * *wfun      return: work function
+ * *dwfun     return: derivative of work function with respect to field
+ */
+int workf(double e, double *wfun, double *dwfun)
+{
+	return(0);
+}
+
+/*
+ * Time dependent waveform
+ * Statement: WAVEFORM
+ * Parameter: F.WAVE
+ * Arguments:
+ * time       transient time
+ * dt         time step
+ * *bias      return: bias
+ */
+int wave(double time, double dt, double *bias)
+{
+	return(0);
+}
+
+/*
+ * Electron heterojunction thermionic emission current
+ * Statement: INTERFACE
+ * Parameter: F.HTE.N
+ * Arguments:
+ * egp        Energy Gap on "plus" side (eV)
+ * egm        Energy Gap on "minus" side (eV)
+ * ncp        Conduction density of states on "plus" side (per cc)
+ * ncm        Conduction density of states on "minus" side (per cc)
+ * nvp        Valence density of states on "plus" side (per cc)
+ * nvm        Valence density of states on "minus" side (per cc)
+ * vnp        electron thermal velocity on "plus" side (cm/s)
+ * vnm        electron thermal velocity on "minus" side (cm/s)
+ * vpp        hole thermal velocity on "plus" side (cm/s)
+ * vpm        hole thermal velocity on "minus" side (cm/s)
+ * nplus      electron concentration on "plus" side (per cc)
+ * nminus     electron concentration on "minus" side (per cc)
+ * pplus      hole concentration on "plus" side (per cc)
+ * pminus     hole concentration on "minus" side (per cc)
+ * deltaec    conduction band edge discontinuity (eV)
+ * temp       temperature (K)
+ * jn         electron emission current (A/sqcm)
+ * djndnp     derivative of emission current with respect to nplus
+ * djndnm     derivative of emission current with respect to nminus
+ * djndpp     derivative of emission current with respect to pplus
+ * djndpm     derivative of emission current with respect to pminus
+ */
+int hten(double egp, double egm, double ncp, double ncm, double nvp, double nvm, double vnp, double vnm, double vpp, double vpm, double nplus, double nminus, double pplus, double pminus, double deltaec, double temp, double *jn, double *djndnp, double *djndnm, double *djndpp, double *djndpm)
+{
+	return(0);
+}
+
+/*
+ * Hole heterojunction thermionic emission current
+ * Statement: INTERFACE
+ * Parameter: F.HTE.P
+ * Arguments:
+ * egp        Energy Gap on "plus" side (eV)
+ * egm        Energy Gap on "minus" side (eV)
+ * ncp        Conduction density of states on "plus" side (per cc)
+ * ncm        Conduction density of states on "minus" side (per cc)
+ * nvp        Valence density of states on "plus" side (per cc)
+ * nvm        Valence density of states on "minus" side (per cc)
+ * vnp        electron thermal velocity on "plus" side (cm/s)
+ * vnm        electron thermal velocity on "minus" side (cm/s)
+ * vpp        hole thermal velocity on "plus" side (cm/s)
+ * vpm        hole thermal velocity on "minus" side (cm/s)
+ * nplus      electron concentration on "plus" side (per cc)
+ * nminus     electron concentration on "minus" side (per cc)
+ * pplus      hole concentration on "plus" side (per cc)
+ * pminus     hole concentration on "minus" side (per cc)
+ * deltaev    valence band edge discontinuity (eV)
+ * temp       temperature (K)
+ * jp         hole emission current (A/sqcm)
+ * djpdnp     derivative of emission current with respect to nplus
+ * djpdnm     derivative of emission current with respect to nminus
+ * djpdpp     derivative of emission current with respect to pplus
+ * djpdpm     derivative of emission current with respect to pminus
+ */
+int htep(double egp, double egm, double ncp, double ncm, double nvp, double nvm, double vnp, double vnm, double vpp, double vpm, double nplus, double nminus, double pplus, double pminus, double deltaev, double temp, double *jp, double *djpdnp, double *djpdnm, double *djpdpp, double *djpdpm)
+{
+	return(0);
+}
+
+/*
+ * Electron heterojunction thermionic field emission delta term
+ * Statement: INTERFACE
+ * Parameter: F.HTFE.N
+ * Arguments:
+ * ecplus     energy at peak of barrier on "plus" side (eV)
+ * ex         energy of integration (eV)
+ * dec        barrier height (Ec+ - Ec-) (eV)
+ * xe         location of emin relative to the hetero-interface (cm)
+ * mn         relative electron effective mass (unitless)
+ * temp       temperature (K)
+ * delta      field emission delta term
+ */
+int htfen(double ecplus, double ex, double dec, double xe, double mn, double temp, double *delta)
+{
+	return(0);
+}
+
+/*
+ * Hole heterojunction thermionic field emission current
+ * Statement: INTERFACE
+ * Parameter: F.HTFE.P
+ * Arguments:
+ * evplus     valence band energy at peak of barrier on "plus" side (eV)
+ * ex         energy of integration (eV)
+ * dev        barrier height (Ev- - Ev+) (eV)
+ * xe         location of emin relative to the hetero-interface (cm)
+ * mp         relative hole effective mass (unitless)
+ * temp       temperature (K)
+ * delta      field emission delta term
+ */
+int htfep(double evplus, double ex, double dev, double xe, double mp, double temp, double *delta)
+{
+	return(0);
+}
+
+/*
+ * Band-to-band generation rate
+ * Statement: MATERIALS
+ * Parameter: F.BBT
+ * n            electron concentration (cm^-3) 
+ * p            hole concentration (cm^-3) 
+ * ni           intrinsic carrier concentration (cm^-3) 
+ * ef           Electric field (V/cm) 
+ * *ut          return: generation rate (cm^-3s^-1)
+ * *dutdn      return: derivative of ut wrt electron concentration 
+ * *dutdp      return: derivative of ut wrt hole concentration 
+ * *dutde      return: derivative of ut wrt electric field 
+ */
+int bbt(double n,double p,double ni,double ef,double *ut,double *dutdn,double *dutdp,double *dutde)
+{       
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * SEU generation rate as a function of position and time (3D)
+ * Statement: SINGLEEVENTUPSET
+ * Parameter: F.SEU
+ * Arguments:
+ * x          location x (microns)
+ * y          location y (microns)
+ * z          location y (microns)
+ * t          time (seconds )
+ * *rat       generation rate per cc per sec.
+ */
+int seu(double x,double y,double z,double t,double *rat)
+{
+	return(0);                /* 0 - ok */
+}
+
+
+/*
+ * General field dependent mobility model for electrons.
+ * TOtal FIeld Mobility (parallel and perpendicular field components)
+ * Statement: MATERIAL/MOBILITY
+ * Parameter: F.TOFIMUN
+ * Arguments:
+ * Eperp    [in] - perpendicular electric field (V/cm)
+ * Na       [in] - acceptor concentration  (/cm^3)
+ * Nd       [in] - donor concentration     (/cm^3)
+ * nconc    [in] - electron concentration  (/cm^3)
+ * Epar     [in] - parallel electric field (V/cm)
+ * TL       [in] - lattice temperature     (K)
+ * xcomp    [in] - x-species fraction      (0-1)
+ * ycomp    [in] - y-species fraction      (0-1)
+ * 
+ * *mun     [return] - hole mobility (cm^2/Vs)
+ * *dmundep [return] - derivative of *mun wrt Eperp
+ * *dmundepar [return] - derivative of *mun wrt Epar
+ * *dmundl  [return] - derivative of *mun wrt TL
+ * *dmundn  [return] - derivative of *mun wrt nconc
+
+*/
+
+
+int tofimun(double Eperp,double Na,double Nd,double nconc,double Eparl,double TL,double xcomp,double ycomp,double *mun,double *dmundep,double *dmundepar,double *dmundl,double *dmundn)
+{
+/* Example is Caughey-Thomas with Beta = 2.5 */
+   double mu0 = 1000.0;
+   double t1, t2, tmp;
+   double vsat=2.0e6;
+   double beta=2.5,f=Eparl;
+
+   t1 = pow(mu0*f/vsat,beta);
+
+   t2 = 1.0/(1.0+t1);
+
+   tmp = pow(t2,1.0/beta);
+
+   *mun = mu0*tmp;
+
+   *dmundepar = -(*mun)*t1*t2/f;
+
+   *dmundep=0.0;
+   *dmundl =0.0;
+   *dmundn = 0.0;
+
+   return(0);
+}
+
+
+/*
+ * General field dependent mobility model for holes.
+ * TOtal FIeld Mobility (parallel and perpendicular field components)
+ * Statement: MATERIAL/MOBILITY
+ * Parameter: F.TOFIMUP
+ * Arguments:
+ * Eperp    [in] - perpendicular electric field (V/cm)
+ * Na       [in] - acceptor concentration  (/cm^3)
+ * Nd       [in] - donor concentration     (/cm^3)
+ * pconc    [in] - hole concentration      (/cm^3)
+ * Epar     [in] - parallel electric field (V/cm)
+ * TL       [in] - lattice temperature     (K)
+ * xcomp    [in] - x-species fraction      (0-1)
+ * ycomp    [in] - y-species fraction      (0-1)
+ * 
+ * *mup     [return] - hole mobility (cm^2/Vs)
+ * *dmupdep [return] - derivative of *mup wrt Eperp
+ * *dmupdepar [return] - derivative of *mup wrt Epar
+ * *dmupdl  [return] - derivative of *mup wrt TL
+ * *dmupdp  [return] - derivative of *mup wrt pconc
+
+*/
+
+
+int tofimup(double Eperp,double Na,double Nd,double pconc,double Eparl,double TL,double xcomp,double ycomp,double *mup,double *dmupdep,double *dmupdepar,double *dmupdl,double *dmupdp)
+{
+	*mup = 500;
+
+	*dmupdepar = 0.0;
+	*dmupdep   = 0.0;
+	*dmupdl    = 0.0;
+	*dmupdp    = 0.0;
+
+	return(0);
+}
+
+
+
+/*
+ * Position and potential dependent electron mobility model.
+ * Statement: MATERIAL/MOBILITY
+ * Parameter: F.LOCALMUN
+ * Arguments:
+ * na    acceptor concentration (per cc)
+ * nd    donor concentration (per cc)
+ * e     electric field (V/cm)
+ * pot   potential Volts
+ * tl    lattice temperature (K)
+ * Tn    electron temperature (K)
+ * pos   pos[0] = x-coord, pos[1] = y-coord pos[2] = z-coord  (cm)
+ * *mu   [return] field dependent mobility (cm^2/Vs)
+ * *dmde [return] derivative of mu with e
+ * *dmdv [return] derivative of mu with pot
+ * *dmdtl [return] derivative of mu with Tl
+ * *dmdtn [return] derivative of mu with Tn
+ */
+
+int localmun(double na, double nd, double e, double pot,double Tl,double Tn,double *pos,double *mu,double *dmde,double *dmdv,double *dmdtl,double *dmdtn)   
+{
+    const double mobmin=10.0;
+/*
+ The following shows a mobility which decreases as the square of the distance
+ from the origin of the devcie 
+ */
+
+   *mu = 1000.0 - 1.0e10*(pos[0]*pos[0] + pos[1]*pos[1] + pos[2]*pos[2]);
+
+    if (*mu < mobmin) *mu = mobmin;
+
+    *dmde =  0.0;
+    *dmdv =  0.0;
+    *dmdtl = 0.0;
+    *dmdtn = 0.0;
+
+    return(0);
+
+}
+
+
+/*
+ * Position and potential dependent hole mobility model.
+ * Statement: MATERIAL/MOBILITY
+ * Parameter: F.LOCALMUP
+ * Arguments:
+ * na    acceptor concentration (per cc)
+ * nd    donor concentration (per cc)
+ * e     electric field (V/cm)
+ * pot   potential Volts
+ * tl    lattice temperature (K)
+ * Tp    hole temperature (K)
+ * pos   pos[0] = x-coord, pos[1] = y-coord pos[2] = z-coord  (cm)
+ * *mu   [return] field dependent mobility (cm^2/Vs)
+ * *dmde [return] derivative of mu with e
+ * *dmdv [return] derivative of mu with pot
+ * *dmdtl [return] derivative of mu with Tl
+ * *dmdtp [return] derivative of mu with Tp
+ */
+
+int localmup(double na, double nd, double e, double pot,double Tl,double Tp,double *pos,double *mu,double *dmde,double *dmdv,double *dmdtl,double *dmdtp)   
+{
+    const double mobmin=10.0;
+/*
+ * The following example shows a mobility with a linear dependence on
+ * device potential
+ */
+
+    *mu = 1000.0 - pot*100;
+
+    if (*mu < mobmin) *mu = mobmin;
+
+    *dmde =  0.0;
+    *dmdv =  100.0;
+    *dmdtl = 0.0;
+    *dmdtp = 0.0;
+
+    return(0);
+}
+
+/*
+ * Temperature and concentration dependent phonon drag contribution to
+ * electron thermopower in GIGA
+ * Statement: MATERIAL/MODELS
+ * Parameter: F.PDN
+ * Arguments:
+ * TL - Lattice Temperature (Kelvin)      [in]
+ * nconc -  Electron concentration (/cc)  [in]
+ *  *dp  -  Phonon drag contribution      [out]
+ *  *dpddt - derivative of *pd w.r.t. TL  [out]
+ *  *dpddc - derivative of *pd w.r.t. nconc [out]
+ */
+int fphonondragn(double TL, double nconc,double *pd, double *dpddt,double *dpddc)
+{
+	*pd = 0.1 * pow(TL/300.0,-3.5);
+	*dpddt = -3.5/TL * (*pd);
+	*dpddc = 0.0;
+	return(0);
+}
+
+/*
+ * Temperature and concentration dependent phonon drag contribution to
+ * hole thermopower in GIGA
+ * Statement: MATERIAL/MODELS
+ * Parameter: F.PDP
+ * Arguments:
+ * TL - Lattice Temperature (Kelvin)      [in]
+ * pconc -  Hole concentration (/cc)      [in]
+ *  *pd  -  Phonon drag contribution      [out]
+ *  *dpddt - derivative of *pd w.r.t. TL  [out]
+ *  *dpddc - derivative of *pd w.r.t. pconc [out]
+ */
+int fphonondragp(double TL, double pconc,double *pd, double *dpddt,double *dpddc)
+{
+	*pd = 0.1 * pow(TL/300.0,-3.5);
+	*dpddt = -3.5/TL * (*pd);
+	*dpddc = 0.0;
+	return(0);
+}
+
+/*
+ * User laser gain function.
+ * Statement: LASER
+ * Parameter: F.LGAIN
+ * Arguments:
+ * energy    light energy (eV)
+ * omega     light angular frequency r/s
+ * n         electron concentration (per cc)
+ * p         hole concentration (per cc)
+ * qfn       electron quasi-Fermi level (eV)
+ * qfp       hole quasi-Fermi level (eV)
+ * jn        electron current density (A/sqcm)
+ * jp        hole current density (A/sqcm)
+ * x         x position (um)
+ * y         y position (um)
+ * z         z position (um)
+ * region    region number
+ * xcomp     x composition fraction
+ * ycomp     y composition fraciton
+ * *gain     return: optical gain
+ * *dgdn     return: derivative of gain with elec. concentration
+ * *dgdp     return: derivative of gain with hole concentration
+ * *dgdqfn   return: derivative of gain with elec. quasi-Fermi level
+ * *dgdqfp   return: derivative of gain with hole quasi-Fermi level
+ * *dgdjn    return: derivative of gain with elec. current density
+ * *dgdjp    return: derivative of gain with hole current density
+ */
+int lgain(double energy, double omega, double n, double p, double qfn, double qfp, double jn, double jp, double x, double y, double z, int region, double xcomp, double ycomp, double *gain, double *dgdn, double *dgdp, double *dgdqfn, double *dgdqfp, double *dgdjn, double *dgdjp)
+{
+	return(0);
+}
+
+/*
+ * User transverse optical mode intensity profile
+ * Note: mode is automatically normalized
+ * Statement: LASER
+ * Parameter: F.OMODE
+ * Arguments:
+ * tmode        transverse mode number (0, 1, 2, ...)
+ * x            x position (um)
+ * y            y position (um)
+ * z            z position (um)
+ * *intensity   return: optical field intensity (power/area)
+ */
+int omode(int tmode, double x, double y, double z, double *intensity)
+{
+	return(0);
+}
+
+/*
+ * Phase change material (PCM) resistivity hysterisis model
+ * Statement: MODEL
+ * Parameter: F.PCM
+ * Arguments:
+ * dt      time step (seconds) (dt=0 -> static)
+ * temp    current temperature (K)
+ * told    last temperature (K)
+ * *rho    resistivity (micro-ohm-cm) (on input last step resistivity, return new resistivity)
+ * *drhodt derivative of resistivity with temperature (micro-ohm-cm/K)
+ * *hlat   latent heat (W/cc)
+ */
+int pcm(double dt, double temp, double told, double *rho, double *drhodt, double *hlat)
+{
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * LCD direction cosines
+ * Statement: MODEL
+ * Parameter: F.LCDCOS
+ * Arguments:
+ * x       x location in microns
+ * y       y location in microns
+ * z       z location in microns
+ * *ux     x direction cosine
+ * *uy     y direction cosine
+ * *uz     z direction cosine
+ */
+int lcdcos(double x, double y, double z, double *ux, double *uy, double *uz)
+{
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Coherent light image.
+ * Statement: BEAM
+ * Parameter: F.IMAGE
+ * Arguments:
+ * x     x coordinate in image plane (um).
+ * z     z coordinate in image plane (um).
+ * *i    return relative intensity (unitless scale factor).
+ */
+int image(double x, double z, double *i)
+{
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * User definable lenslet.
+ * Statement: LENS
+ * Parameter: F.LENS
+ * Arguments:
+ * x     x coordinate in image plane (um).
+ * z     z coordinate in image plane (um).
+ * *y    return: y lenslet location (um).
+ */
+int lenslet(double x, double z, double *y)
+{
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * User definable electron impact ionization coefficient alpha.
+ * Statement: IMPACT
+ * Parameter: F.IIAN
+ * Arguments:
+ * x      x composition fraction.
+ * y      y composition fraction.
+ * temp   temperature (K).
+ * e      electric field (V/cm).
+ * *alpha return: ionization coefficient (cm^-1).
+ * *dade  return: derivative of alpha with respect to e (V^-1).
+ * *dadl  return: derivative of alpha with respect to temp (cm^-1*K^-1).
+ */
+int iian(double x, double y, double temp, double e, double *alpha, double *dade, double *dadl)
+{
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * User definable hole impact ionization coefficient alpha.
+ * Statement: IMPACT
+ * Parameter: F.IIAP
+ * Arguments:
+ * x      x composition fraction.
+ * y      y composition fraction.
+ * temp   temperature (K).
+ * e      electric field (V/cm).
+ * *alpha return: ionization coefficient (cm^-1).
+ * *dade  return: derivative of alpha with respect to e (V^-1).
+ * *dadl  return: derivative of alpha with respect to temp (cm^-1*K^-1).
+ */
+int iiap(double x, double y, double temp, double e, double *alpha, double *dade, double *dadl)
+{
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * User definable electron anisotropic impact ionization coefficient alpha.
+ * Statement: IMPACT
+ * Parameter: F.IIANISON
+ * Arguments:
+ * x      x composition fraction.
+ * y      y composition fraction.
+ * temp   temperature (K).
+ * ex     electric field component in x-direction (V/cm).
+ * ey     electric field component in y-direction (V/cm).
+ * *alpha return: ionization coefficient (cm^-1).
+ * *dadex  return: derivative of alpha with respect to ex (V^-1).
+ * *dadey  return: derivative of alpha with respect to ey (V^-1).
+ * *dadl  return: derivative of alpha with respect to temp (cm^-1*K^-1).
+ */
+int iianison(double x, double y, double temp, double ex, double ey, double *alpha, double *dadex, double *dadey, double *dadl)
+{
+    return(0);
+}
+
+
+/*
+ * User definable hole anisotropic impact ionization coefficient alpha.
+ * Statement: IMPACT
+ * Parameter: F.IIANISOP
+ * Arguments:
+ * x      x composition fraction.
+ * y      y composition fraction.
+ * temp   temperature (K).
+ * ex     electric field component in x-direction (V/cm).
+ * ey     electric field component in y-direction (V/cm).
+ * *alpha return: ionization coefficient (cm^-1).
+ * *dadex  return: derivative of alpha with respect to ex (V^-1).
+ * *dadey  return: derivative of alpha with respect to ey (V^-1).
+ * *dadl  return: derivative of alpha with respect to temp (cm^-1*K^-1).
+ */
+
+int iianisop(double x, double y, double temp, double ex, double ey, double *alpha, double *dadex, double *dadey, double *dadl)
+{
+    return(0);
+}
+
+/*
+ * User definable electron anisotropic impact ionization coefficient alpha.
+ * Statement: IMPACT
+ * Parameter: F3.IIANISON
+ * Arguments:
+ * x      x composition fraction.
+ * y      y composition fraction.
+ * temp   temperature (K).
+ * ex     electric field component in x-direction (V/cm).
+ * ey     electric field component in y-direction (V/cm).
+ * ez     electric field component in z-direction (V/cm).
+ * *alpha return: ionization coefficient (cm^-1).
+ * *dadex  return: derivative of alpha with respect to ex (V^-1).
+ * *dadey  return: derivative of alpha with respect to ey (V^-1).
+ * *dadez  return: derivative of alpha with respect to ez (V^-1).
+ * *dadl  return: derivative of alpha with respect to temp (cm^-1*K^-1).
+ */
+int iianison3(double x, double y, double temp, double ex, double ey, double ez, double *alpha, double *dadex, double *dadey, double *dadez, double *dadl)
+{
+    return(0);
+}
+
+
+/*
+ * User definable hole anisotropic impact ionization coefficient alpha.
+ * Statement: IMPACT
+ * Parameter: F3.IIANISOP
+ * Arguments:
+ * x      x composition fraction.
+ * y      y composition fraction.
+ * temp   temperature (K).
+ * ex     electric field component in x-direction (V/cm).
+ * ey     electric field component in y-direction (V/cm).
+ * ez     electric field component in z-direction (V/cm).
+ * *alpha return: ionization coefficient (cm^-1).
+ * *dadex  return: derivative of alpha with respect to ex (V^-1).
+ * *dadey  return: derivative of alpha with respect to ey (V^-1).
+ * *dadez  return:derivative of alpha with respect  to ez (V^-1).
+ * *dadl  return: derivative of alpha with respect to temp (cm^-1*K^-1).
+ */
+
+int iianisop3(double x, double y, double temp, double ex, double ey, double ez,double *alpha, double *dadex, double *dadey, double *dadez,double *dadl)
+{
+    return(0);
+}
+
+
+
+/*
+ * User definable position dependent magnetic field
+ * Statement: MODELS
+ * Parameter: F.BFIELD
+ * Arguments:
+ * x      x coordinate  (microns).
+ * y      y coordinate  (microns).
+ * z      z coordinate  (microns).
+ * *bx  return: x-component of magnetic field strength (Tesla).
+ * *by  return: y-component of magnetic field strength (Tesla).
+ * *bz  return: z-component of magnetic field strength (Tesla).
+ */
+int magneticfield(double x, double y, double z, double *bx, double *by, double *bz)
+{
+/* For 2d model, *bx and *by must be zero, for 3d model remember that
+   div B = 0 */
+	*bx=0.0;
+	*by=0.0;
+        *bz=0.0;
+
+
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Multistate trap configuration transfer rates .
+ * Statement: INTTRAP
+ * Parameter: F.MSCRATES 
+ * Arguments:
+ * i          [in]     starting state (from 1 up to number of states)
+ * j          [in]     final state    (from 1 up to number of states)
+ * ec         [in]     conduction band energy (eV)
+ * ev         [in]     valence band energy (eV)
+ * qfn        [in]     energy of electron quasi-fermi level (eV)  
+ * qfp        [in]     energy of hole quasi-fermi level (eV)
+ * *etrap     [in]     array of energy levels associated with each trap state (eV)
+ * fn         [in]     electron concentration  (c.c.)
+ * fp         [in]     hole concentration (c.c.)
+ * ttl        [in]     lattice temperature (Kelvin)
+ * ttn        [in]     electron temperature (Kevin)
+ * ttp        [in]     hole temperature (Kelvin)
+ * species1   [in]     concentration of species 1 or atomic hydrogen (c.c.) 
+ * species2   [in]     concentration of species 2 or molecular hydrogen (c.c.)
+ * species3   [in]     concentration of species 3 (c.c.)
+ * field      [in]     insulator field (V/cm)
+ * *rate      [return] transition rate from state i to j in units of /second
+ * *setderivs [return] set to 1 if you are also specifying derivatives of rates
+ * *derivs    [return] this is an array for storing set of derivatives w.r.t.
+ *                     each input quantity. Array indices are defined as
+ *                     constants for convenience.  
+ */
+/*  All energies refer to electron energy and have same reference energy so
+all energy differences are obtained by simple subracction */
+/* Example is for 3-state NBTI  model  */
+int msctransitionrates(int i, int j, double ec, double ev, double qfn, double qfp, double *etrap, double fn, double fp, double ttl, double ttn, double ttp, double species1, double species2, double species3, double field, double *rate, int *setderivs, double *derivs)
+{
+/* use these constants as argument to derivs array if setting derivatives */
+/* If hydrogen transport is enabled instead of generic ionic species then
+species1 is atomic hydrogen and species2 is molecular hydrogen */
+const int QFN=0;const int QFP=1;const int ELEC=2;const int HOLE=3;
+const int TTL=4;const int TTN=5;const int TTP=6;const int SP1=7;
+const int SP2=8;const int SP3=9;const int FLD=10;
+const double BOLTS=8.617346815e-5; 
+double vth_p,vth_n,sigma_p,sigma_n,Delta_MPE_p,Delta_MPE_n,Fc;
+
+/* Initialise derivative w.r.t. each input quantity to be zero */
+derivs[QFN] = 0;
+derivs[QFP] = 0;
+derivs[ELEC] = 0;
+derivs[HOLE] = 0;
+derivs[TTL] = 0;
+derivs[TTN] = 0;
+derivs[TTP] = 0;
+derivs[SP1] = 0;
+derivs[SP2] = 0;
+derivs[SP3] = 0;
+derivs[FLD]=0;
+*setderivs=1;
+
+vth_p=1.5e7;vth_n=1.0e7;sigma_p=3.0e-14;sigma_n=1.0e-16,Delta_MPE_p=0.054;Delta_MPE_n=0.02;Fc=1.0e7;
+
+*rate=0.0;
+ 
+switch (i)
+{
+    case 1:
+	if (j==2)
+	{	
+	    *rate=fp*vth_p*sigma_p*exp(-Delta_MPE_p/(BOLTS*ttl))*(ev-etrap[0] > 0 ? exp((etrap[0]-ev)/(BOLTS*ttl)) : 1.0)*exp(field*field/(Fc*Fc));
+            derivs[HOLE] = vth_p*sigma_p*exp(-Delta_MPE_p/(BOLTS*ttl))*(ev-etrap[0] > 0 ? exp((etrap[0]-ev)/(BOLTS*ttl)) : 1.0)*exp(field*field/(Fc*Fc));
+            (*rate)= (*rate) + fn*vth_n*sigma_n*exp(-Delta_MPE_p/(BOLTS*ttl))*(etrap[0]-ec > 0 ? exp((ec-qfn)/(BOLTS*ttl)) : exp((etrap[0]-qfn)/(BOLTS*ttl)));
+            derivs[ELEC]=vth_n*sigma_n*exp(-Delta_MPE_p/(BOLTS*ttl))*(etrap[0]-ec > 0 ? exp((ec-qfn)/(BOLTS*ttl)) : exp((etrap[0]-qfn)/(BOLTS*ttl)));
+            derivs[QFN] = fn*vth_n*sigma_n*exp(-Delta_MPE_p/(BOLTS*ttl))*(etrap[0]-ec > 0 ? -exp((ec-qfn)/(BOLTS*ttl))/(BOLTS*ttl) : -exp((etrap[0]-qfn)/(BOLTS*ttl))/(BOLTS*ttl)); 
+	}
+        else if (j==3)
+	{
+	    *rate=0.0;
+	}
+	else
+	   puts("Error: index not handled");
+
+    break;
+    case 2:
+	if (j==1)
+	{	
+	   *rate=0.0;
+	}
+        else if (j==3)
+	{
+	  
+ 	   *rate     = fp*vth_p*sigma_p*exp(-Delta_MPE_n/(BOLTS*ttl))*(ev-etrap[1] > 0.0 ? exp(-(ev-qfp)/(BOLTS*ttl)) : exp(-(etrap[1]-qfp)/(BOLTS*ttl)));
+           derivs[HOLE] = vth_p*sigma_p*exp(-Delta_MPE_n/(BOLTS*ttl))*(ev-etrap[1] > 0.0 ? exp(-(ev-qfp)/(BOLTS*ttl)) : exp(-(etrap[1]-qfp)/(BOLTS*ttl)));
+           derivs[QFP]  = fp*vth_p*sigma_p*exp(-Delta_MPE_n/(BOLTS*ttl))*(ev-etrap[1] > 0.0 ? exp(-(ev-qfp)/(BOLTS*ttl))/(BOLTS*ttl) : exp(-(etrap[1]-qfp)/(BOLTS*ttl))/(BOLTS*ttl));
+           (*rate) = (*rate) + fn*vth_n*sigma_n*exp(-Delta_MPE_n/(BOLTS*ttl))*(etrap[1]-ec > 0.0 ? exp(-(etrap[1]-ec)/(BOLTS*ttl)) : 1.0);
+           derivs[ELEC] = vth_n*sigma_n*exp(-Delta_MPE_n/(BOLTS*ttl))*(etrap[1]-ec > 0.0 ? exp(-(etrap[1]-ec)/(BOLTS*ttl)) : 1.0); 
+	}
+	else
+	   puts("Error: index not handled");
+
+    break;
+    case 3:
+	if (j==1)
+	{	
+           *rate=0.0;
+	}
+        else if (j==2)
+	{
+	   *rate     = fp*vth_p*sigma_p*exp(-Delta_MPE_n/(BOLTS*ttl))*(ev-etrap[1] > 0.0? exp((etrap[1]-ev)/(BOLTS*ttl)): 1.0);
+           derivs[HOLE] = vth_p*sigma_p*exp(-Delta_MPE_n/(BOLTS*ttl))*(ev-etrap[1] > 0.0 ? exp((etrap[1]-ev)/(BOLTS*ttl)): 1.0);
+           (*rate) = (*rate) + fn*vth_n*sigma_n*exp(-Delta_MPE_n/(BOLTS*ttl))*(etrap[1]-ec > 0 ? exp((ec-qfn)/(BOLTS*ttl)) : exp((etrap[1]-qfn)/(BOLTS*ttl)));
+           derivs[ELEC]=vth_n*sigma_n*exp(-Delta_MPE_n/(BOLTS*ttl))*(etrap[1]-ec > 0 ? exp((ec-qfn)/(BOLTS*ttl)) : exp((etrap[1]-qfn)/(BOLTS*ttl)));
+           derivs[QFN] = fn*vth_n*sigma_n*exp(-Delta_MPE_n/(BOLTS*ttl))*(etrap[1]-ec > 0 ? -exp((ec-qfn)/(BOLTS*ttl))/(BOLTS*ttl) : -exp((etrap[1]-qfn)/(BOLTS*ttl))/(BOLTS*ttl)); 
+	}
+	else
+	   puts("Error: index not handled");
+    break;
+    default:
+	puts("Error: index not handled");
+    break;
+}
+return(0);
+}
+
+/*
+ * Extended version of Multistate trap configuration transfer rates.
+ * Statement: INTTRAP
+ * Parameter: F.EXTMSCRATE 
+ * Arguments:
+ * i          [in]     starting state (from 1 up to number of states)
+ * j          [in]     final state    (from 1 up to number of states)
+ * ec         [in]     conduction band energy (eV)
+ * ev         [in]     valence band energy (eV)
+ * qfn        [in]     energy of electron quasi-fermi level (eV)  
+ * qfp        [in]     energy of hole quasi-fermi level (eV)
+ * *etrap     [in]     array of energy levels associated with each trap state (eV)
+ * fn         [in]     electron concentration  (c.c.)
+ * fp         [in]     hole concentration (c.c.)
+ * ttl        [in]     lattice temperature (Kelvin)
+ * ttn        [in]     electron temperature (Kevin)
+ * ttp        [in]     hole temperature (Kelvin)
+ * species1   [in]     concentration of species 1 or atomic hydrogen (c.c.) 
+ * species2   [in]     concentration of species 2 or molecular hydrogen (c.c.)
+ * species3   [in]     concentration of species 3 (c.c.)
+ * field      [in]     insulator field (V/cm)
+ * sign       [in]     electron cross-section in cm^2
+ * sigp       [in]     hole cross-section in cm^2
+ * photon_energy  [in] photon energy in eV  
+ * beam_intensity [in] beam power in W/cm^3
+ * *rate      [return] transition rate from state i to j in units of /second
+ * *setderivs [return] set to 1 if you are also specifying derivatives of rates
+ * *derivs    [return] this is an array for storing set of derivatives w.r.t.
+ *                     each input quantity. Array indices are defined as
+ *                     constants for convenience.  
+ */
+int mscextendedtransitionrates(int i, int j, double ec, double ev, double qfn, double qfp, double *etrap, double fn, double fp, double ttl, double ttn, double ttp, double species1, double species2, double species3, double field, double sign,double sigp,double photon_energy,double beam_intensity,double *rate, int *setderivs, double *derivs)
+{
+/* use these constants as argument to derivs array if setting derivatives */
+/* If hydrogen transport is enabled instead of generic ionic species then
+species1 is atomic hydrogen and species2 is molecular hydrogen */
+const int QFN=0;const int QFP=1;const int ELEC=2;const int HOLE=3;
+const int TTL=4;const int TTN=5;const int TTP=6;const int SP1=7;
+const int SP2=8;const int SP3=9;const int FLD=10;
+const double BOLTS=8.617346815e-5; 
+double vth_p,vth_n,sigma_p,sigma_n,Delta_MPE_p,Delta_MPE_n,Fc;
+
+/* Initialise derivative w.r.t. each input quantity to be zero */
+derivs[QFN] = 0;
+derivs[QFP] = 0;
+derivs[ELEC] = 0;
+derivs[HOLE] = 0;
+derivs[TTL] = 0;
+derivs[TTN] = 0;
+derivs[TTP] = 0;
+derivs[SP1] = 0;
+derivs[SP2] = 0;
+derivs[SP3] = 0;
+derivs[FLD]=0;
+*setderivs=1;
+
+vth_p=1.5e7;vth_n=1.0e7;sigma_p=3.0e-14;sigma_n=1.0e-16,Delta_MPE_p=0.054;Delta_MPE_n=0.02;Fc=1.0e7;
+
+*rate=0.0;
+ 
+switch (i)
+{
+    case 1:
+	if (j==2)
+	{	
+	    *rate=fp*vth_p*sigma_p*exp(-Delta_MPE_p/(BOLTS*ttl))*(ev-etrap[0] > 0 ? exp((etrap[0]-ev)/(BOLTS*ttl)) : 1.0)*exp(field*field/(Fc*Fc));
+            derivs[HOLE] = vth_p*sigma_p*exp(-Delta_MPE_p/(BOLTS*ttl))*(ev-etrap[0] > 0 ? exp((etrap[0]-ev)/(BOLTS*ttl)) : 1.0)*exp(field*field/(Fc*Fc));
+            (*rate)= (*rate) + fn*vth_n*sigma_n*exp(-Delta_MPE_p/(BOLTS*ttl))*(etrap[0]-ec > 0 ? exp((ec-qfn)/(BOLTS*ttl)) : exp((etrap[0]-qfn)/(BOLTS*ttl)));
+            derivs[ELEC]=vth_n*sigma_n*exp(-Delta_MPE_p/(BOLTS*ttl))*(etrap[0]-ec > 0 ? exp((ec-qfn)/(BOLTS*ttl)) : exp((etrap[0]-qfn)/(BOLTS*ttl)));
+            derivs[QFN] = fn*vth_n*sigma_n*exp(-Delta_MPE_p/(BOLTS*ttl))*(etrap[0]-ec > 0 ? -exp((ec-qfn)/(BOLTS*ttl))/(BOLTS*ttl) : -exp((etrap[0]-qfn)/(BOLTS*ttl))/(BOLTS*ttl)); 
+	}
+        else if (j==3)
+	{
+	    *rate=0.0;
+	}
+	else
+	   puts("Error: index not handled");
+
+    break;
+    case 2:
+	if (j==1)
+	{	
+	   *rate=0.0;
+	}
+        else if (j==3)
+	{
+	  
+ 	   *rate     = fp*vth_p*sigma_p*exp(-Delta_MPE_n/(BOLTS*ttl))*(ev-etrap[1] > 0.0 ? exp(-(ev-qfp)/(BOLTS*ttl)) : exp(-(etrap[1]-qfp)/(BOLTS*ttl)));
+           derivs[HOLE] = vth_p*sigma_p*exp(-Delta_MPE_n/(BOLTS*ttl))*(ev-etrap[1] > 0.0 ? exp(-(ev-qfp)/(BOLTS*ttl)) : exp(-(etrap[1]-qfp)/(BOLTS*ttl)));
+           derivs[QFP]  = fp*vth_p*sigma_p*exp(-Delta_MPE_n/(BOLTS*ttl))*(ev-etrap[1] > 0.0 ? exp(-(ev-qfp)/(BOLTS*ttl))/(BOLTS*ttl) : exp(-(etrap[1]-qfp)/(BOLTS*ttl))/(BOLTS*ttl));
+           (*rate) = (*rate) + fn*vth_n*sigma_n*exp(-Delta_MPE_n/(BOLTS*ttl))*(etrap[1]-ec > 0.0 ? exp(-(etrap[1]-ec)/(BOLTS*ttl)) : 1.0);
+           derivs[ELEC] = vth_n*sigma_n*exp(-Delta_MPE_n/(BOLTS*ttl))*(etrap[1]-ec > 0.0 ? exp(-(etrap[1]-ec)/(BOLTS*ttl)) : 1.0); 
+	}
+	else
+	   puts("Error: index not handled");
+
+    break;
+    case 3:
+	if (j==1)
+	{	
+           *rate=0.0;
+	}
+        else if (j==2)
+	{
+	   *rate     = fp*vth_p*sigma_p*exp(-Delta_MPE_n/(BOLTS*ttl))*(ev-etrap[1] > 0.0? exp((etrap[1]-ev)/(BOLTS*ttl)): 1.0);
+           derivs[HOLE] = vth_p*sigma_p*exp(-Delta_MPE_n/(BOLTS*ttl))*(ev-etrap[1] > 0.0 ? exp((etrap[1]-ev)/(BOLTS*ttl)): 1.0);
+           (*rate) = (*rate) + fn*vth_n*sigma_n*exp(-Delta_MPE_n/(BOLTS*ttl))*(etrap[1]-ec > 0 ? exp((ec-qfn)/(BOLTS*ttl)) : exp((etrap[1]-qfn)/(BOLTS*ttl)));
+           derivs[ELEC]=vth_n*sigma_n*exp(-Delta_MPE_n/(BOLTS*ttl))*(etrap[1]-ec > 0 ? exp((ec-qfn)/(BOLTS*ttl)) : exp((etrap[1]-qfn)/(BOLTS*ttl)));
+           derivs[QFN] = fn*vth_n*sigma_n*exp(-Delta_MPE_n/(BOLTS*ttl))*(etrap[1]-ec > 0 ? -exp((ec-qfn)/(BOLTS*ttl))/(BOLTS*ttl) : -exp((etrap[1]-qfn)/(BOLTS*ttl))/(BOLTS*ttl)); 
+	}
+	else
+	   puts("Error: index not handled");
+    break;
+    default:
+	puts("Error: index not handled");
+    break;
+}
+return(0);
+}
+
+
+/*
+ * Singlet exciton generation rate as a function of position and
+ *    electron/hole concentration
+ * Statement: MODELS
+ * Parameter: F.GENSINGLET
+ * Arguments:
+ * x          location x (microns)
+ * y          location y (microns)
+ * z          location z (microns)
+ * t          time (seconds)
+ * n          electron concentration (per cc)
+ * p          hole concentration (per cc)
+ * *g         singlet generation rate per cc per sec.
+ * *dgdn      differential of g w.r.t. electron concentration
+ * *dgdp      differential of g w.r.t. hole concentration
+ */
+int
+gensinglet(double x, double y, double z, double t,
+           double n, double p,
+           double *g, double *dgdn, double *dgdp)
+{
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Triplet exciton generation rate as a function of position and
+ *    electron/hole concentration
+ * Statement: MODELS
+ * Parameter: F.GENTRIPLET
+ * Arguments:
+ * x          location x (microns)
+ * y          location y (microns)
+ * z          location z (microns)
+ * t          time (seconds)
+ * n          electron concentration (per cc)
+ * p          hole concentration (per cc)
+ * *g         triplet generation rate per cc per sec.
+ * *dgdn      differential of g w.r.t. electron concentration
+ * *dgdp      differential of g w.r.t. hole concentration
+ */
+int
+gentriplet(double x, double y, double z, double t,
+           double n, double p,
+           double *g, double *dgdn, double *dgdp)
+{
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Position dependent exciton parameters.
+ * These have been split into three functions
+ *    kexciton: params in both singlet and triplet equations.
+ *    ksinglet: params only in singlet continutiy equation.
+ *    ktriplet: params only in triplet continuity equation.
+ */
+
+/*
+ * Position dependent exciton parameters.
+ * Statement: MODELS
+ * Parameter: F.KEXCITON
+ * Arguments:
+ * x          location x (microns)
+ * y          location y (microns)
+ * z          location z (microns)
+ * *rst       fraction of singlets formed during Langevin recombination.
+ * *rsttt     fraction of singlets formed during triplet-triplet annihilation.
+ * *kisc      intersystem crossing constant (s^-1)
+ * *ktt       triplet-triplet annihilation rate (cm^3 s^-1)
+ */
+int
+kexciton(double x, double y, double z, double *rst, double *rsttt, double *kisc, double *ktt)
+{
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Position dependent singlet parameters.
+ * Statement: MODELS
+ * Parameter: F.KSINGLET
+ * Arguments:
+ * x          location x (microns)
+ * y          location y (microns)
+ * z          location z (microns)
+ * *taus      singlet radiative decay lifetime (s)
+ * *pheff     photoluminescence quantum efficieny
+ * *lds       singlet diffusion length (um)
+ * *knrs      singlet non-radiative decay constant (s^-1)
+ * *ksp       singlet polaron constant (cm^3 s^-1)
+ * *kss       singlet-singlet constant (cm^3 s^-1)
+ * *kst       singlet-triplet constant (cm^3 s^-1)
+ */
+int
+ksinglet(double x, double y, double z,
+         double *taus, double *pheff, double *lds, double *knrs,
+         double *ksp, double *kss, double *kst)
+{
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Position dependent singlet parameters.
+ * Statement: MODELS
+ * Parameter: F.KTRIPLET
+ * Arguments:
+ * x          location x (microns)
+ * y          location y (microns)
+ * z          location z (microns)
+ * *taut      triplet radiative decay lifetime (s)
+ * *ldt       triplet diffusion length (um)
+ * *knrt      triplet non-radiative decay constant (s^-1)
+ * *ktp       singlet polaron constant (cm^3 s^-1)
+ */
+int
+ktriplet(double x, double y, double z,
+         double *taut, double *ldt, double *knrt, double *ktp)
+{
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Position dependent dipole density (for optical calculation).
+ * Statement: SAVE, LED
+ * Paramater: F.RHO.DIPOLE
+ * x          location x (microns)
+ * y          location y (microns)
+ * z          location z (microns)
+ * *dipole    dipole density (per cc)
+ */
+int
+rhodipole(double x, double y, double z,
+          double *dipole)
+{
+	return(0);                /* 0 - ok */
+}
+
+
+/*
+ * Temperature, doping and concentration dependent recombination rate
+ * Statement: MATERIAL
+ * Parameter: F.SRH
+ * Arguments:
+ * temp       temperature (K)
+ * n          electron concentration (per cc)
+ * p          hole concentration (per cc)
+ * ni         intrinsic concentration (per cc)
+ * nd         donor density (per cc)
+ * na         acceptor density (per cc)
+ * *r         recombination rate (per cc per s )
+ * *drdn      derivative of recomb with respect to n
+ * *drdp      derivative of recomb with respect to p
+ * *drdl      derivative of recomb with respect to T
+ */
+int srh(double temp,double n,double p,double ni,double nd,double na,double *r,double *drdn,double *drdp,double *drdl)
+{
+	return(0);                /* 0 - ok */
+}
+
+
+/*
+ * Position dependent Gaussian DOS model band parameters
+ * Statement: MATERIAL
+ * Parameter: F.GAUSSIANDOS
+ * Arguments:
+ * x          location x (microns)
+ * y          location y (microns)
+ * z          location z (microns)
+ * *chi       affinity (eV)
+ * *eg        band gap (eV)
+ * *ntc       total conduction band Gaussian DOS density of states
+ * *sigc      conduction band Gaussian DOS standard deviation
+ * *ntv       total valence band Gaussian DOS density of states
+ * *sigv      valence band Gaussian DOS standard deviation
+ * *gntc      guest total conduction band Gaussian DOS density of states
+ * *gsigc     guest conduction band Gaussian DOS standard deviation
+ * *gntv      guest total valence band Gaussian DOS density of states
+ * *gsigv     guest valence band Gaussian DOS standard deviation
+ * *gdec      conduction band shift between the center of the host and guest Gaussian DOS
+ * *gdev      valence band shift between the center of the host and guest Gaussian DOS
+ */
+int gaussiandos(double x, double y, double z, double *chi, double *eg, double *ntc, double *sigc, double *ntv, double *sigv, double *gntc, double *gsigc, double *gntv, double *gsigv, double *gdec, double *gdev)
+{
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Position and time dependent dopant singlet annihilation model
+ * Statement: MATERIAL
+ * Parameter: F.DSANNIHILATION
+ * Arguments:
+ * x          location x (microns)
+ * y          location y (microns)
+ * z          location z (microns)
+ * time       time (s)
+ * n          electron concentration (cm^-3)
+ * p          hole concentration (cm^-3)
+ * sd         dopant singlet concentration (cm^-3)
+ * *an        annilihilation rate (cm^-3s^-1)
+ * *dandn     derivative of annilihilation rate wrt electron concentration
+ * *dandp     derivative of annilihilation rate wrt hole concentration
+ * *dandsd     derivative of annilihilation rate wrt dopant singlet concentration
+ */
+int dsannihilation(double x, double y, double z, double time, double n, double p, double sd, double *an, double *dandn, double *dandp, double *dandsd)
+{
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Quantum well capture-escape inplane electron mobility model
+ * Statement: MATERIAL
+ * Parameter: F.CAPT.MUN
+ * Arguments:
+ * x          location x (microns)
+ * y          location y (microns)
+ * z          location z (microns)
+ * xcomp      composition fraction x
+ * ycomp      composition fraction y
+ * nd         donor concentration (per cc)
+ * na         acceptor concentration (per cc)
+ * temp       temperature (K)
+ * efield     electric field (V/cm)
+ * *mun        electron mobility (cm^2/V s)
+ */
+int qwcaptmun(double x, double y, double z, double xcomp, double ycomp, double nd, double na, double temp, double efield, double *mun)
+{
+	return(0);                /* 0 - ok */
+}
+
+
+/*
+ * Quantum well capture-escape inplane hole mobility model
+ * Statement: MATERIAL
+ * Parameter: F.CAPT.MUP
+ * Arguments:
+ * x          location x (microns)
+ * y          location y (microns)
+ * z          location z (microns)
+ * xcomp      composition fraction x
+ * ycomp      composition fraction y
+ * nd         donor concentration (per cc)
+ * na         acceptor concentration (per cc)
+ * temp       temperature (K)
+ * efield     electric field (V/cm)
+ * *mup       hole mobility (cm^2/V s)
+ */
+int qwcaptmup(double x, double y, double z, double xcomp, double ycomp, double nd, double na, double temp, double efield, double *mup)
+{
+	return(0);                /* 0 - ok */
+}
+
+
+/*
+ * SONOS acceptor trap density and energy depth 
+ * Statement: NITRIDECHARGE
+ * Parameter: F.NITACC
+ * Arguments:
+ * ireg       region index
+ * x          location x (microns)
+ * y          location y (microns)
+ * *conc      density (/cm^3)
+ * *depth     energy depth of trap below conduction band (eV)
+ */
+
+int nitacc(int ireg,double x,double y,double *conc,double *energy_depth)
+{   
+    return(0);                   /*  0 - ok  */
+}
+
+/*
+ * SONOS donor trap density and energy depth 
+ * Statement: NITRIDECHARGE
+ * Parameter: F.NITDON
+ * Arguments:
+ * ireg       region index
+ * x          location x (microns)
+ * y          location y (microns)
+ * *conc      density (/cm^3)
+ * *depth     energy depth of trap above valence band (eV)
+ */
+
+
+int nitdon(int ireg,double x,double y,double *conc,double *energy_depth)
+{ 
+    return(0);                   /*  0 - ok  */
+}
+
+
+/*
+ * SONOS trap cross-sections 
+ * Statement: NITRIDECHARGE
+ * Parameter: F.NITSIGMA
+ * Arguments:
+ * ireg       region index
+ * x          location x (microns)
+ * y          location y (microns)
+ * ex         x-component of electric field
+ * ey         y-component of electric field
+ * *sigmap_n  SIGMAP.N cross-section cm^2
+ * *sigman_p  SIGMAN.P cross-section cm^2
+ * *sigmat_n  SIGMAT.N cross-section cm^2
+ * *sigmat_p  SIGMAT.P cross-section cm^2
+*/
+
+int nitsigma(int ireg,double x,double y,double ex,double ey,double *sigmap_n,double *sigman_p,double *sigmat_n,double *sigmat_p)
+{
+    return(0);                   /*  0 - ok  */
+}
+
+/*
+ * Internal Photoemission model electron distribution function for UST
+ * Statement: CONTACT
+ * Parameter: F.USTELECDF
+ * Arguments:
+ * int electrode [in]      electrode index
+ * double tn [in]          transverse user electron temperature
+ * double energy [in]      electron energy
+ * double time [in]        time if performing a transient simulation
+ * double *ge [return]     electron distribution function perpendicular
+ * double *dge [return]    derivative of (*ge) w.r.t energy
+ */
+
+int edfipe(int electrode,double tn,double energy,double time,double *ge,double *dge)
+{
+  return(0);
+}
+
+/*
+ * Internal Photoemission model hole distribution function for UST
+ * Statement: CONTACT
+ * Parameter: F.USTHOLEDF
+ * Arguments:
+ * int electrode [in]      electrode index
+ * double tp [in]          transverse user hole temperature
+ * double energy [in]      hole energy
+ * double time [in]        time if performing a transient simulation
+ * double *gh  [return]    hole distribution function perpendicular
+ * double *dgh [return]    derivative of (*gh) w.r.t energy
+ */
+
+int hdfipe(int electrode,double tp,double energy,double time,double *gh,double *dgh)
+{
+  return(0);
+}
+
+/*
+ * Position, temperature, field, and concentration dependent recombination
+ * Statement: MATERIAL
+ * Parameter: F.TATRECOMB
+ * Arguments:
+ * xcomp      composition fraction x
+ * ycomp      composition fraction y
+ * temp       temperature (K)
+ * n          electron concentration (per cc)
+ * p          hole concentration (per cc)
+ * efld       field strength (V/cm)
+ * *r         recombination rate (per cc per s )
+ * *drdn      derivative of recomb with respect to n
+ * *drdp      derivative of recomb with respect to p
+ * *drdl      derivative of recomb with respect to T
+ * *drde      derivative of recomb with respect to field
+ */
+int tatrecomb(double xcomp,double ycomp,double temp,double n,double p,double efld,double *r,double *drdn,double *drdp,double *drdl,double *drde)
+{
+	return(0);                /* 0 - ok */
+}
+
+/*
+ * Position, temperature, field, trap lifetime, density and carrier concentration dependent recombination
+ * Statement: MATERIAL
+ * Parameter: F.TATTRAPRECOMB
+ * Arguments:
+ * xcomp      composition fraction x
+ * ycomp      composition fraction y
+ * temp       temperature (K)
+ * n          electron concentration (per cc)
+ * p          hole concentration (per cc)
+ * efld       field strength (V/cm)
+ * nt         trap density
+ * tn         trap electron recombination time
+ * tp         trap hole recombination time
+ * *r         recombination rate (per cc per s )
+ * *drdn      derivative of recomb with respect to n
+ * *drdp      derivative of recomb with respect to p
+ * *drdl      derivative of recomb with respect to T
+ * *drde      derivative of recomb with respect to field
+ */
+ 
+int tattraprecomb(double xcomp,double ycomp,double temp,double n,double p,double efld,double nt, \
+                  double tn, double tp, double *r,double *drdn,double *drdp,double *drdl,double *drde)
+{
+	return(0);                /* 0 - ok */
+}
+
