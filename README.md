@@ -281,5 +281,8 @@ cite.
 
 ## 8. Licence and citation
 
-Add the licence required by your institution before publishing. If you use this
-code, please cite the manuscript above.
+Released under the Apache License 2.0; see [LICENSE](LICENSE).
+
+If you use this code, please cite the manuscript above. The associated dataset
+is archived separately on Zenodo; see the manuscript's data availability
+statement for the DOI.
