@@ -1,0 +1,11 @@
+# Normalise line endings: the code was authored and runs on Linux.
+# Without this, Git on Windows rewrites every .py to CRLF, which pollutes diffs
+# and breaks shell scripts that expect LF.
+* text=auto eol=lf
+
+# Binary-ish assets that must not be touched
+*.nk      -text
+*.lib     -text
+*.str     -text
+*.png     -text
+*.pdf     -text

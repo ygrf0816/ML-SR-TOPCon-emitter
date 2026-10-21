@@ -1,0 +1,49 @@
+# ------- secrets (NEVER commit) -------
+ds_api
+.env
+*.key
+
+# ------- data (not version-controlled; see README section 3) -------
+new_data/
+data/
+**/saomiao3csv/
+**/saomiao3jv/
+**/saomiao3/
+**/trap_curves/
+**/defect_exports/
+**/generated_boron_txt/
+*.str
+
+# ------- generated outputs -------
+outputs/
+**/outputs/
+logs/
+temp/
+tmp/
+
+# ------- python -------
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.ipynb_checkpoints/
+
+# ------- tooling caches -------
+.pysr_cache/
+pysr_checkpoints/
+catboost_info/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ------- editors / OS -------
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# ------- local backups -------
+*.bak
+*.bak_*
+*~
