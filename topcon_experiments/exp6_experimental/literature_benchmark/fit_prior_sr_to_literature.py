@@ -225,7 +225,6 @@ def main() -> None:
         if desc_row is None or "error" in dg:
             continue
         feat_vals = {c: float(desc_row[c]) for c in (MODEL2_FEATURES + ATHENA_FEATURES) if c in desc_row}
-        feat_vals["doping_R_sheet"] = float(parsed.loc[pid, "R_sheet_measured"])
 
         for label, variant, fm in PRIOR_VARIANTS:
             if label not in prior_exprs:

@@ -21,12 +21,13 @@ code expects, where they come from, and where to put them.
 ├── topcon_experiments/       # the paper's analysis pipeline (Linux, GPU/CPU workstation)
 │   ├── config.py             #   single source of truth: paths, feature lists, hyper-parameters
 │   ├── common/               #   shared layer (data, forward chain, metrics, plotting)
-│   ├── exp1_forward/         #   Sec. 3.2  two-stage surrogate
+│   ├── exp1_forward/         #   Sec. 3.2  two-stage surrogate + the three-route ablation
 │   ├── exp2_inverse/         #   Sec. 3.2  DE + L-BFGS-B inverse design
 │   ├── exp3_classifier/      #   Sec. 3.3  efficiency-tier classifier + SHAP
 │   ├── exp4_symbolic/        #   Sec. 3.3  symbolic regression + grey-box curve model
 │   ├── exp5_correlation/     #   Sec. 3.1  physical + semantic correlation analysis
 │   ├── exp6_experimental/    #   literature benchmark (D1–D10 profiles)
+│   ├── response_inverse_experiment/  # revision: 50-sample TCAD chain + inverse-design re-runs
 │   ├── tmp_fig5/             #   Fig. 5 panel assembly
 │   ├── COMPUTATION_INDEX.md  #   detailed strategy / script / accuracy-report index (Chinese)
 │   ├── run_all.py            #   sequential entry for exp1–exp5
@@ -199,7 +200,27 @@ python -m topcon_experiments.exp4_symbolic.package_six_variant_results
 # ---------- E. correlation + literature benchmark ----------
 python run_exp5_correlation.py
 python -m topcon_experiments.exp6_experimental.run_literature_benchmark
+
+# ---------- F. revision experiments (Table S3, S4, S15, S16; Fig. S2, S3, S8) ----------
+# three-route ablation: run v1 first, v2 reuses its stage-1 models
+python -m topcon_experiments.exp1_forward.reviewer_end2end_compare
+python -m topcon_experiments.exp1_forward.reviewer_end2end_compare_v2
+
+# 50-sample chain + inverse-design re-runs (see that directory's README)
+python -m topcon_experiments.response_inverse_experiment.run_r1_4_pipeline \
+    --aug topcon_experiments/response_inverse_experiment/data/topcon_dataset_v1_aug.csv --out out
+python -m topcon_experiments.response_inverse_experiment.run_multiseed --case before --seeds 0-9
+python -m topcon_experiments.response_inverse_experiment.run_multiseed --case after  --seeds 0-9
+python -m topcon_experiments.response_inverse_experiment.run_de_target --target iv_Voc --out out
+python -m topcon_experiments.response_inverse_experiment.dump_de_population
 ```
+
+The 50-row augmentation table is shipped as
+`topcon_experiments/response_inverse_experiment/data/topcon_dataset_v1_aug.csv`, so
+section F runs without re-generating any TCAD data. Re-generating it from scratch
+needs Silvaco and the modules listed in
+`topcon_experiments/response_inverse_experiment/README.md` §4; every path variable
+in those scripts holds the placeholder `"<PATH>"`.
 
 All results land under `topcon_experiments/outputs/`, which is git-ignored. For the
 accuracy-report index that ties each script to its output CSV, see
@@ -211,12 +232,15 @@ accuracy-report index that ties each script to its output CSV, see
 
 | Manuscript | Code |
 |---|---|
-| Sec. 2.1 Dataset generation | not distributed here; dataset deposited on Zenodo (see §3) |
+| Sec. 2.1 Dataset generation | not distributed here; dataset deposited on Zenodo (see §3). The 50 supplementary samples **are** here: `response_inverse_experiment/00_design` → `02_augment`, with the TCAD batch product shipped as `response_inverse_experiment/data/results_50.csv` |
 | Sec. 2.2 Modeling and optimisation | `topcon_experiments/exp1_forward/`, `exp2_inverse/` |
 | Sec. 2.3 Physical interpretation | `exp3_classifier/`, `exp4_symbolic/` |
 | Sec. 3.1 Distribution & correlation | `exp2_inverse/plot_fig3_extension.py`, `exp5_correlation/` |
 | Sec. 3.2 Forward prediction & inverse design | `exp1_forward/`, `exp2_inverse/` |
 | Sec. 3.3 SHAP & symbolic regression | `exp3_classifier/shap_analysis.py`, `exp4_symbolic/` |
+| Table S2, S6, S9 (17-dimensional input, 17 scalar tasks) | `config.py` (`CURVE_DESCRIPTORS` / `MODEL2_FEATURES`) |
+| Table S3, Fig. S2 (three-route ablation) | `exp1_forward/reviewer_end2end_compare.py`, `..._v2.py` |
+| Table S4, S15, S16, Fig. S3, S8 (offset and augmentation) | `response_inverse_experiment/` |
 | Fig. 5 panels | `tmp_fig5/` |
 | Equation S1–S2 (double-Gaussian, offset prior) | `exp4_symbolic/defect_shape_prior.py`, `exp6_experimental/literature_benchmark/fit_double_gaussian_to_sim.py` |
 

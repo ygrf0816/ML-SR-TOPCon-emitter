@@ -152,7 +152,6 @@ def collect_all_text_items(topk_within: int = 5) -> list[TextItem]:
         "athena_to_doping_FWHM",
         "athena_to_doping_gradient_max",
         "athena_to_doping_dose_log",
-        "athena_to_doping_R_sheet",
     ]
     defect_sources = [
         "athena_to_defect_vac_N_peak_log",

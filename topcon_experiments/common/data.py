@@ -21,6 +21,8 @@ from topcon_experiments.config import (
     LOG_TARGETS_MODEL1,
     META_JSON,
     MODEL2_FEATURES,
+    BOUNDS_QUANTILE_HIGH,
+    BOUNDS_QUANTILE_LOW,
     RANDOM_STATE,
     TEST_SIZE,
 )
@@ -130,7 +132,9 @@ def inverse_transform_target(target: str, values: np.ndarray | pd.Series) -> np.
     return arr
 
 
-def get_athena_bounds(df: pd.DataFrame | None = None, q_low: float = 0.05, q_high: float = 0.95) -> list[tuple[float, float]]:
+def get_athena_bounds(df: pd.DataFrame | None = None,
+                      q_low: float = BOUNDS_QUANTILE_LOW,
+                      q_high: float = BOUNDS_QUANTILE_HIGH) -> list[tuple[float, float]]:
     if df is None:
         df = load_raw_dataframe()
     bounds = []

@@ -50,14 +50,7 @@ TASK_THEORY = {
 }
 
 # Per-task theory overrides (slug -> text)
-SLUG_THEORY: dict[str, str] = {
-    "athena_to_doping_R_sheet": (
-        "前部发射极方阻 $R_{\\mathrm{sheet}}$（Ω/□）由硼扩散后的有效掺杂剂量与结深共同决定，"
-        "经验上 $R_s \\propto 1/(N_{\\mathrm{dose}} \\cdot \\mu_p)$；"
-        "BSG 厚度与硼源浓度决定可用剂量，扩散温度/时间控制激活与再分布。"
-        "本任务从 8 个 Athena 工艺参数直接回归方阻（目标为原尺度，非 log）。"
-    ),
-}
+SLUG_THEORY: dict[str, str] = {}
 
 
 def _extract_json_block(text: str) -> dict | None:
@@ -300,7 +293,7 @@ def _evaluation_appendix(slug: str, best_row: pd.Series) -> str:
             "",
             f"- 图像：`sr_plots/regression_scatter_sr_{slug}.png`",
             f"- test R²（重算）: `{_fmt_num(m.get('R2'))}`",
-            f"- test RMSE: `{_fmt_num(m.get('RMSE'))}` Ω/□" if "R_sheet" in slug else f"- test RMSE: `{_fmt_num(m.get('RMSE'))}`",
+            f"- test RMSE: `{_fmt_num(m.get('RMSE'))}`",
             f"- test MAE: `{_fmt_num(m.get('MAE'))}`",
             f"- n_test: `{int(m.get('n', 0))}`",
             "",
@@ -346,27 +339,6 @@ def _evaluation_appendix(slug: str, best_row: pd.Series) -> str:
             if pd.notna(sr_r2) and pd.notna(ag_r2):
                 lines.append(
                     f"- **对比**：PySR 最优 test R² = {sr_r2:.4f}；AutoGluon test R² = {ag_r2:.4f}。"
-                )
-                lines.append("")
-
-    if slug == "athena_to_doping_R_sheet":
-        pearson = OUTPUT_ROOT / "exp5_correlation" / "data" / "pearson_descriptors_iv.csv"
-        if pearson.exists():
-            corr = pd.read_csv(pearson, index_col=0)
-            rs_label = "Front emitter sheet resistance (ohm/sq)"
-            if rs_label in corr.index:
-                lines += [
-                    "### 5.3 数据集 Pearson 相关（方阻 vs IV）",
-                    "",
-                    "| 变量 | Pearson r |",
-                    "| --- | --- |",
-                ]
-                for iv in ("Voc", "Jsc", "FF", "PCE"):
-                    if iv in corr.columns:
-                        lines.append(f"| {iv} | {_fmt_num(corr.loc[rs_label, iv])} |")
-                lines.append("")
-                lines.append(
-                    "方阻与 PCE/Jsc 呈负相关（|r|≈0.55~0.57），与“方阻升高→发射极电阻增大→电性能下降”一致。"
                 )
                 lines.append("")
 

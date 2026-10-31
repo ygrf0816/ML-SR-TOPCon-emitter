@@ -24,6 +24,13 @@ ATHENA_FEATURES = [
     "athena_F_O2",
 ]
 
+# The nine profile descriptors, exactly as described in the Methods and listed in
+# Table S2: six doping descriptors plus three defect descriptors. Model 1 predicts
+# these nine, and Model 2 consumes them together with the eight process set-points,
+# so the union is 17-dimensional (Note S3, Table S1 and Table S6).
+#
+# Sheet resistance is deliberately not a parameter of this study: it is neither a
+# Model-1 output nor a Model-2 input, and no symbolic formula is derived for it.
 DOPING_DESCRIPTORS = [
     "doping_N_peak",
     "doping_x_peak",
@@ -31,7 +38,6 @@ DOPING_DESCRIPTORS = [
     "doping_FWHM",
     "doping_gradient_max",
     "doping_dose",
-    "doping_R_sheet",
 ]
 
 DEFECT_DESCRIPTORS = [
@@ -40,7 +46,7 @@ DEFECT_DESCRIPTORS = [
     "defect_vac_dose",
 ]
 
-CURVE_DESCRIPTORS = DOPING_DESCRIPTORS + DEFECT_DESCRIPTORS
+CURVE_DESCRIPTORS = DOPING_DESCRIPTORS + DEFECT_DESCRIPTORS      # 9
 
 IV_TARGETS = ["iv_Voc", "iv_Jsc", "iv_FF", "iv_Eff"]
 IV_TARGET_LABELS = {"iv_Voc": "Voc", "iv_Jsc": "Jsc", "iv_FF": "FF", "iv_Eff": "PCE"}
@@ -64,7 +70,9 @@ MODEL2_FEATURES = ATHENA_FEATURES + CURVE_DESCRIPTORS
 
 RANDOM_STATE = 42
 TEST_SIZE = 0.2
-AUTOGLUON_PRESET = "medium_quality_faster_train"
+# AutoGluon preset, as stated in Note S3: "high_quality", i.e. the multi-layer
+# stacked ensemble with L1 base learners and L2 meta-learners.
+AUTOGLUON_PRESET = "high_quality"
 
 MODEL1_DIR = OUTPUT_ROOT / "exp1_forward" / "models" / "model1"
 MODEL2_DIR = OUTPUT_ROOT / "exp1_forward" / "models" / "model2"
@@ -83,34 +91,31 @@ CURVE_NUM_POINTS = 256
 DEPTH_MAX = 2.0
 CURVE_SMOOTH_METHOD = "spline"
 
-# Inverse design (differential evolution)
-DE_LOCAL_REFINE = True
+# Inverse design — SciPy differential_evolution, strategy "best1bin",
+# popsize = 15 (total individuals = 15 * 8 = 120), mutation/crossover dithered,
+# 30 generations, convergence tolerance disabled (tol = atol = 0).
+DE_LOCAL_REFINE = True          # multi-start L-BFGS-B after DE, for the PCE target
 DE_MAXITER = 30
 DE_POPSIZE = 15
-DE_MUTATION = (0.5, 1.0)
+DE_MUTATION = (0.5, 1.0)        # dithering interval
 DE_RECOMBINATION = 0.7
 DE_SEED = 42
-DE_TOL = 0.0 #控制早停，设置为0不启用
+DE_TOL = 0.0                    # early stopping disabled
 DE_ATOL = 0.0
 DE_LOG_EVERY_EVALS = 10
 # ---------------------------------------------------------------------------
 # IV reporting convention
 #
-# Every IV metric reported by this package is the raw surrogate output. No
-# post-hoc per-target scaling is applied anywhere in the analysis chain.
-#
-# NOTE: the dataset itself was generated with one sample-independent optical
-# current normalisation (Jsc and Eff x1.16), applied at the data-generation stage
-# before any modelling. It leaves Voc and FF untouched and is described
-# explicitly in the Methods; it is not a post-hoc calibration. The generation
-# code that applies it is not distributed with this repository; the deposited
-# dataset already carries the normalised values, so the analysis chain below
-# never applies it.
+# Every I-V metric reported by this package is the output of the surrogate chain,
+# used as produced.
 # ---------------------------------------------------------------------------
+# Search boundary: the full random sampling range of each parameter in the
+# dataset, as stated in Note S3, section 2.
+BOUNDS_QUANTILE_LOW = 0.0
+BOUNDS_QUANTILE_HIGH = 1.0
+
 # Legacy: tight bounds from top-efficiency samples (no longer used for iv_Eff seeding)
 DE_TOP_FRAC = 0.05
-BOUNDS_QUANTILE_LOW = 0.05
-BOUNDS_QUANTILE_HIGH = 0.95
 
 # NSGA-II
 NSGA_POP_SIZE = 40

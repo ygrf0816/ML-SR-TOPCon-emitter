@@ -18,7 +18,6 @@ COLUMN_LABELS: dict[str, str] = {
     "doping_FWHM": "Doping FWHM (um) [doping_FWHM]",
     "doping_gradient_max": "Doping max gradient (cm-3/um) [doping_gradient_max]",
     "doping_dose": "Doping dose integral (cm-3*um) [doping_dose]",
-    "doping_R_sheet": "Front emitter sheet resistance (ohm/sq) [doping_R_sheet]",
     "defect_vac_N_peak": "Vacancy peak (cm-3) [defect_vac_N_peak]",
     "defect_vac_gradient_max": "Vacancy max gradient [defect_vac_gradient_max]",
     "defect_vac_dose": "Vacancy dose integral [defect_vac_dose]",

@@ -73,7 +73,7 @@ def run_de_for_metric(
         f"  DE config: maxiter={DE_MAXITER}, popsize={popsize}, "
         f"tol={DE_TOL}, atol={DE_ATOL}; ~{budget} objective evals expected"
     )
-    log(f"  Objective = raw surrogate output for {metric} (no calibration)")
+    log(f"  Objective = surrogate output for {metric}")
     log(f"  Each eval runs model1(9) + model2(1) for {metric}")
 
     def _flush_generation(gen: int) -> None:

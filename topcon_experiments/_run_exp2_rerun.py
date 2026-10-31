@@ -42,7 +42,7 @@ print("META_JSON   ->", cfg.META_JSON, flush=True)
 print("DE cfg: maxiter=%d popsize=%d seed=%s mutation=%s recomb=%s"
       % (cfg.DE_MAXITER, cfg.DE_POPSIZE, cfg.DE_SEED, cfg.DE_MUTATION,
          cfg.DE_RECOMBINATION), flush=True)
-print("Objective: raw surrogate output (no calibration)", flush=True)
+print("Objective: surrogate output", flush=True)
 
 de_single.main()
 

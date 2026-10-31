@@ -65,7 +65,6 @@ SYM = {
     "doping_FWHM":              ("FWHM",      "um",      "doping descriptor"),
     "doping_gradient_max":      ("N_a,grad",  "cm^-3 um^-1", "doping descriptor"),
     "doping_dose":              ("N_a,eff",   "cm^-3 um", "doping descriptor"),
-    "doping_R_sheet":           ("R_sheet",   "ohm/sq",  "doping descriptor"),
     "defect_vac_N_peak":        ("N_t,peak",  "cm^-3",   "defect descriptor"),
     "defect_vac_gradient_max":  ("N_t,grad",  "cm^-3 um^-1", "defect descriptor"),
     "defect_vac_dose":          ("N_t,eff",   "cm^-3 um", "defect descriptor"),

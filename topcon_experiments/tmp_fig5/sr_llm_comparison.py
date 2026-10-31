@@ -51,7 +51,6 @@ PAPER_TASK_GROUPS: dict[str, list[str]] = {
         "athena_to_doping_dose_log",
         "athena_to_doping_FWHM",
         "athena_to_doping_junction_depth",
-        "athena_to_doping_R_sheet",
     ],
     "Defect": [
         "athena_to_defect_vac_dose_log",

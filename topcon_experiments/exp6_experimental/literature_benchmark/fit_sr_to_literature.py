@@ -1,4 +1,4 @@
-"""Fit SR formulas to literature curves / R_sheet with partial process constraints."""
+"""Fit SR doping-curve formulas to literature profiles with partial process constraints."""
 
 from __future__ import annotations
 
@@ -51,7 +51,6 @@ LIT_CURVES_DIR = (
     / "curves"
 )
 BASE_OUT_DIR = Path(__file__).resolve().parents[1] / "outputs" / "literature_benchmark"
-R_SHEET_SR = OUTPUT_ROOT / "exp4_symbolic" / "sr_tabular_athena_to_doping_R_sheet.csv"
 CURVE_SR_LEGACY = SR_DOPING_CURVE_FORMULA_PATH  # tail_full: 18-dim, depth 0.25~2 um
 ADAPTIVE_EXP_DIR = OUTPUT_ROOT / "exp4_symbolic" / "curve_adaptive_experiment"
 CURVE_SR_ADAPTIVE = ADAPTIVE_EXP_DIR / "sr_formulas_doping_adaptive_full.csv"
@@ -61,7 +60,7 @@ CURVE_SR_KEEP_BSG_FLOOR = ADAPTIVE_EXP_DIR / "sr_formulas_doping_keep_bsg_floor1
 
 # Each variant: (label, formula path, feature order, N_floor for fit window, depth offset)
 # feature_order is the column order the SR formula was trained on.
-# - legacy_tail: 18-dim (MODEL2 minus doping_R_sheet + depth); depth window [0.25, 2] um,
+# - legacy_tail: 18-dim (17 model inputs + depth); depth window [0.25, 2] um,
 #   literature depth 0 == physical 0.25 um, so offset = 0.25.
 # - adaptive / adaptive_floor1e18: 19-dim (full MODEL2 + depth); absolute physical depth,
 #   literature depth is already physical, offset = 0.
@@ -76,7 +75,7 @@ class CurveVariant:
 
 
 def _legacy_feature_order() -> list[str]:
-    return [c for c in MODEL2_FEATURES if c != "doping_R_sheet"] + ["depth_um"]
+    return list(MODEL2_FEATURES) + ["depth_um"]
 
 
 def _full_feature_order() -> list[str]:
@@ -172,16 +171,6 @@ def _predict_ln_curve(
     return eval_sympy_expr(expr, X)
 
 
-def _predict_r_sheet(expr: str, athena: dict[str, float]) -> float:
-    X = np.zeros((1, len(ATHENA_FEATURES)))
-    for j, col in enumerate(ATHENA_FEATURES):
-        v = float(athena[col])
-        if col in LOG_IN_MODEL:
-            v = np.log(max(v, 1e-30))
-        X[0, j] = v
-    return float(eval_sympy_expr(expr, X)[0])
-
-
 def _median_defaults() -> dict[str, float]:
     df = load_raw_dataframe()
     out: dict[str, float] = {}
@@ -241,7 +230,6 @@ def fit_curve_shape(
     *,
     use_curve_descriptors: bool = True,
     descriptor_mode: str = "anchors",
-    r_sheet_athena: dict[str, float] | None = None,
 ) -> dict:
     """Optimize free features so the SR curve matches literature N(z).
 
@@ -266,16 +254,13 @@ def fit_curve_shape(
     desc = extract_doping_descriptors(z_all_phys, N_all, N_floor=N_floor)
 
     # Feature order used by this variant's SR formula (controls which descriptors
-    # are inputs). doping_R_sheet is excluded for legacy_tail (18-dim training).
+    # are inputs).
     feat_order = variant.feature_order
     feat_cols = feat_order[:-1]  # all but depth_um
-    has_r_sheet = "doping_R_sheet" in feat_cols
 
     if use_curve_descriptors:
         if descriptor_mode == "full":
             for k in DOPING_DESCRIPTORS:
-                if k == "doping_R_sheet" and not has_r_sheet:
-                    continue
                 if k in desc and np.isfinite(desc[k]):
                     fixed[k] = float(desc[k])
         else:
@@ -307,10 +292,6 @@ def fit_curve_shape(
         free_names = list(DEFECT_DESCRIPTORS)
 
     x0 = np.array([defaults.get(n, 1.0) for n in free_names], dtype=float)
-    if r_sheet_athena:
-        for i, n in enumerate(free_names):
-            if n in r_sheet_athena:
-                x0[i] = float(r_sheet_athena[n])
     bnds = []
     for i, n in enumerate(free_names):
         lo, hi = bounds_map.get(n, (max(x0[i] * 0.1, 1e-12), x0[i] * 10.0))
@@ -384,54 +365,6 @@ def fit_curve_shape(
     }
 
 
-def fit_r_sheet(
-    profile_id: str,
-    target_r: float | None = None,
-) -> dict:
-    parsed = load_parsed_table().set_index("profile_id").loc[profile_id]
-    target = float(target_r if target_r is not None else parsed["R_sheet_measured"])
-    defaults = _median_defaults()
-    bounds_map = dataset_feature_bounds()
-    known = dict(parsed["known_params"])
-    fixed = {**{k: defaults[k] for k in ATHENA_FEATURES}, **known}
-    free_names = [c for c in ATHENA_FEATURES if c not in fixed]
-    if not free_names:
-        free_names = ["athena_c_boron", "athena_thick"]
-
-    x0 = np.array([fixed.get(n, defaults[n]) for n in free_names], dtype=float)
-    bnds = [bounds_map.get(n, (max(x0[i] * 0.1, 1e-6), x0[i] * 10.0)) for i, n in enumerate(free_names)]
-    expr = _best_expr(R_SHEET_SR)
-
-    def objective(x: np.ndarray) -> float:
-        athena = {c: fixed[c] for c in ATHENA_FEATURES if c in fixed}
-        for name, val in zip(free_names, x):
-            athena[name] = float(val)
-        try:
-            pred = _predict_r_sheet(expr, athena)
-        except Exception:
-            return 1e12
-        if not np.isfinite(pred):
-            return 1e12
-        return (pred - target) ** 2
-
-    res = differential_evolution(objective, bounds=bnds, seed=42, maxiter=80, polish=True)
-    athena = {c: fixed[c] for c in ATHENA_FEATURES if c in fixed}
-    for name, val in zip(free_names, res.x):
-        athena[name] = float(val)
-    pred = _predict_r_sheet(expr, athena)
-
-    return {
-        "profile_id": profile_id,
-        "method": "r_sheet_de",
-        "R_sheet_target": target,
-        "R_sheet_pred": pred,
-        "R_sheet_rel_err_pct": 100.0 * abs(pred - target) / max(target, 1e-9),
-        "free_params": free_names,
-        "optimized_athena": {k: athena[k] for k in free_names},
-        "known_from_literature": known,
-    }
-
-
 def plot_curve_comparison(profile_id: str, fit_result: dict, variant: CurveVariant, out_dir: Path) -> Path:
     if "error" in fit_result:
         return out_dir / "plots" / f"curve_fit_{profile_id}.png"
@@ -484,22 +417,12 @@ def run_all(variant_label: str = DEFAULT_VARIANT) -> list[Path]:
     written.append(out_dir / "data" / "literature_curve_descriptors.csv")
 
     curve_rows: list[dict] = []
-    rs_rows: list[dict] = []
     parsed = load_parsed_table()
 
     for _, row in parsed.iterrows():
         pid = row["profile_id"]
-        rs_athena: dict[str, float] | None = None
         try:
-            rs = fit_r_sheet(pid)
-            rs_rows.append(rs)
-            known_athena = dict(parsed.set_index("profile_id").loc[pid]["known_params"])
-            rs_athena = {**known_athena, **rs.get("optimized_athena", {})}
-        except Exception as exc:
-            rs_rows.append({"profile_id": pid, "error": str(exc)})
-
-        try:
-            cr = fit_curve_shape(pid, variant, r_sheet_athena=rs_athena)
+            cr = fit_curve_shape(pid, variant)
             curve_rows.append(cr)
             if "error" not in cr:
                 written.append(plot_curve_comparison(pid, cr, variant, out_dir))
@@ -507,10 +430,8 @@ def run_all(variant_label: str = DEFAULT_VARIANT) -> list[Path]:
             curve_rows.append({"profile_id": pid, "variant": variant_label, "error": str(exc)})
 
     curve_path = out_dir / "data" / "curve_shape_fit_summary.csv"
-    rs_path = out_dir / "data" / "r_sheet_fit_summary.csv"
     save_csv(pd.DataFrame(curve_rows), curve_path)
-    save_csv(pd.DataFrame(rs_rows), rs_path)
-    written.extend([curve_path, rs_path])
+    written.append(curve_path)
 
     # merge feasibility table
     feas = parsed.merge(desc_df, on="profile_id", how="left")

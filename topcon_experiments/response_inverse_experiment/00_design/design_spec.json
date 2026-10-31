@@ -1,0 +1,60 @@
+{
+  "seed": 20261021,
+  "n_A1": 10,
+  "n_A2": 20,
+  "n_B": 20,
+  "sig_A1": 0.01,
+  "sig_A2": 0.02,
+  "widen": 1.2,
+  "box_lo": {
+    "athena_thick": 0.01004,
+    "athena_c_boron": 1e+19,
+    "athena_temp1": 900.0023,
+    "athena_time1": 30.0572,
+    "athena_temp2": 900.002,
+    "athena_time2": 15.0002,
+    "athena_F_N2": 1.0022,
+    "athena_F_O2": 1.0006
+  },
+  "box_hi": {
+    "athena_thick": 0.19995,
+    "athena_c_boron": 9e+21,
+    "athena_temp1": 1099.9908,
+    "athena_time1": 299.9123,
+    "athena_temp2": 1099.9777,
+    "athena_time2": 89.9987,
+    "athena_F_N2": 9.9992,
+    "athena_F_O2": 9.9999
+  },
+  "slab_lo": {
+    "athena_thick": 0.01004,
+    "athena_c_boron": 8.461e+20,
+    "athena_temp1": 900.0023,
+    "athena_time1": 30.0572,
+    "athena_temp2": 902.14466,
+    "athena_time2": 15.0002,
+    "athena_F_N2": 1.6391,
+    "athena_F_O2": 1.0006
+  },
+  "slab_hi": {
+    "athena_thick": 0.024488,
+    "athena_c_boron": 2.5849e+21,
+    "athena_temp1": 1013.59968,
+    "athena_time1": 299.9123,
+    "athena_temp2": 1099.9777,
+    "athena_time2": 89.9987,
+    "athena_F_N2": 9.9992,
+    "athena_F_O2": 9.9999
+  },
+  "de_optimum": {
+    "athena_thick": 0.0201345905246441,
+    "athena_c_boron": 1.5547714201715915e+21,
+    "athena_temp1": 927.9248543789964,
+    "athena_time1": 51.08574778827095,
+    "athena_temp2": 1071.490128213719,
+    "athena_time2": 42.63124402180996,
+    "athena_F_N2": 4.081615930695819,
+    "athena_F_O2": 7.374875429920255
+  },
+  "note": "u = (x - box_lo) / (box_hi - box_lo); A groups perturb u, B is LHS in u_slab"
+}
